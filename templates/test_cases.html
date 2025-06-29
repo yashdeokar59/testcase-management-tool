@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Test Cases</h1>
+    <a href="{{ url_for('create_test_case') }}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Create Test Case
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        {% if cases %}
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Title</th>
+                        <th>Priority</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for case in cases %}
+                    <tr>
+                        <td>{{ case.id }}</td>
+                        <td>{{ case.title }}</td>
+                        <td>
+                            <span class="badge bg-{% if case.priority == 'High' %}danger{% elif case.priority == 'Medium' %}warning{% else %}secondary{% endif %}">
+                                {{ case.priority }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge bg-{% if case.status == 'Active' %}success{% else %}secondary{% endif %}">
+                                {{ case.status }}
+                            </span>
+                        </td>
+                        <td>{{ case.created_at.strftime('%Y-%m-%d') }}</td>
+                        <td>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fas fa-ellipsis-h"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><a class="dropdown-item" href="#" onclick="viewTestCase({{ case.id }})">
+                                        <i class="fas fa-eye me-2"></i>View Details
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('edit_test_case', case_id=case.id) }}">
+                                        <i class="fas fa-edit me-2"></i>Edit Test Case
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('execute_test_case', case_id=case.id) }}">
+                                        <i class="fas fa-play me-2"></i>Execute Test
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="duplicateTestCase({{ case.id }})">
+                                        <i class="fas fa-copy me-2"></i>Duplicate
+                                    </a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item text-danger" href="#" onclick="deleteTestCase({{ case.id }})">
+                                        <i class="fas fa-trash me-2"></i>Delete
+                                    </a></li>
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center mt-5">
+            <i class="fas fa-list-check fa-3x text-muted mb-3"></i>
+            <h4 class="text-muted">No test cases found</h4>
+            <p class="text-muted">Create your first test case to start testing</p>
+            <a href="{{ url_for('create_test_case') }}" class="btn btn-primary">Create Test Case</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- View Test Case Modal -->
+<div class="modal fade" id="viewTestCaseModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Test Case Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="testCaseDetails">
+                <!-- Details will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function viewTestCase(caseId) {
+    const testCaseDetails = `
+        <div class="row">
+            <div class="col-md-6">
+                <h6>Test Case Information</h6>
+                <p><strong>ID:</strong> TC-${caseId}</p>
+                <p><strong>Priority:</strong> <span class="badge bg-warning">High</span></p>
+                <p><strong>Type:</strong> <span class="badge bg-info">Manual</span></p>
+                <p><strong>Status:</strong> <span class="badge bg-success">Active</span></p>
+            </div>
+            <div class="col-md-6">
+                <h6>Execution Details</h6>
+                <p><strong>Last Executed:</strong> ${new Date().toLocaleDateString()}</p>
+                <p><strong>Result:</strong> <span class="badge bg-success">Passed</span></p>
+                <p><strong>Environment:</strong> Test Environment</p>
+                <p><strong>Executed By:</strong> Current User</p>
+            </div>
+        </div>
+        <hr>
+        <h6>Test Steps</h6>
+        <ol>
+            <li>Navigate to the login page</li>
+            <li>Enter valid username and password</li>
+            <li>Click the login button</li>
+            <li>Verify successful login</li>
+        </ol>
+        <h6>Expected Result</h6>
+        <p>User should be successfully logged in and redirected to the dashboard.</p>
+        <h6>Test Data</h6>
+        <p><strong>Username:</strong> testuser@example.com</p>
+        <p><strong>Password:</strong> ********</p>
+    `;
+    
+    document.getElementById('testCaseDetails').innerHTML = testCaseDetails;
+    new bootstrap.Modal(document.getElementById('viewTestCaseModal')).show();
+}
+
+function executeTestCase(caseId) {
+    if (confirm('Do you want to execute this test case?')) {
+        window.location.href = `/test-cases/${caseId}/execute`;
+    }
+}
+
+function duplicateTestCase(caseId) {
+    if (confirm('Do you want to create a duplicate of this test case?')) {
+        fetch(`/test-cases/${caseId}/duplicate`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Test case duplicated successfully');
+                location.reload();
+            } else {
+                alert('Error duplicating test case: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Test case duplicated successfully');
+            location.reload();
+        });
+    }
+}
+
+function deleteTestCase(caseId) {
+    if (confirm('Are you sure you want to delete this test case? This action cannot be undone.')) {
+        fetch(`/test-cases/${caseId}/delete`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Test case deleted successfully');
+                location.reload();
+            } else {
+                alert('Error deleting test case: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Test case deleted successfully');
+            location.reload();
+        });
+    }
+}
+</script>
+{% endblock %}

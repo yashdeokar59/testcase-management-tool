@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h2 fw-bold text-dark mb-1">Edit Assignment</h1>
+        <p class="text-muted">Update assignment information</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                <label for="title" class="form-label fw-semibold">Assignment Title</label>
+                                <input type="text" class="form-control" id="title" name="title" value="{{ assignment.title }}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="priority" class="form-label fw-semibold">Priority</label>
+                                <select class="form-select" id="priority" name="priority">
+                                    <option value="Low" {% if assignment.priority == 'Low' %}selected{% endif %}>Low</option>
+                                    <option value="Medium" {% if assignment.priority == 'Medium' %}selected{% endif %}>Medium</option>
+                                    <option value="High" {% if assignment.priority == 'High' %}selected{% endif %}>High</option>
+                                    <option value="Critical" {% if assignment.priority == 'Critical' %}selected{% endif %}>Critical</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="assigned_to" class="form-label fw-semibold">Assigned To</label>
+                                <select class="form-select" id="assigned_to" name="assigned_to" required>
+                                    <option value="">Select User</option>
+                                    {% for user in users %}
+                                    <option value="{{ user.id }}" {% if user.id == assignment.assigned_to %}selected{% endif %}>
+                                        {{ user.username }} ({{ user.role.title() }})
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="due_date" class="form-label fw-semibold">Due Date</label>
+                                <input type="date" class="form-control" id="due_date" name="due_date" 
+                                       value="{{ assignment.due_date.strftime('%Y-%m-%d') if assignment.due_date else '' }}">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="type" class="form-label fw-semibold">Assignment Type</label>
+                                <select class="form-select" id="type" name="type">
+                                    <option value="Testing" {% if assignment.type == 'Testing' %}selected{% endif %}>Testing</option>
+                                    <option value="Development" {% if assignment.type == 'Development' %}selected{% endif %}>Development</option>
+                                    <option value="Review" {% if assignment.type == 'Review' %}selected{% endif %}>Review</option>
+                                    <option value="Documentation" {% if assignment.type == 'Documentation' %}selected{% endif %}>Documentation</option>
+                                    <option value="Bug Fix" {% if assignment.type == 'Bug Fix' %}selected{% endif %}>Bug Fix</option>
+                                    <option value="General" {% if assignment.type == 'General' %}selected{% endif %}>General</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="status" class="form-label fw-semibold">Status</label>
+                                <select class="form-select" id="status" name="status">
+                                    <option value="Assigned" {% if assignment.status == 'Assigned' %}selected{% endif %}>Assigned</option>
+                                    <option value="In Progress" {% if assignment.status == 'In Progress' %}selected{% endif %}>In Progress</option>
+                                    <option value="Completed" {% if assignment.status == 'Completed' %}selected{% endif %}>Completed</option>
+                                    <option value="On Hold" {% if assignment.status == 'On Hold' %}selected{% endif %}>On Hold</option>
+                                    <option value="Cancelled" {% if assignment.status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label fw-semibold">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="5" required>{{ assignment.description }}</textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="notes" class="form-label fw-semibold">Notes (Optional)</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Additional notes or comments">{{ assignment.notes or '' }}</textarea>
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Update Assignment
+                        </button>
+                        <a href="{{ url_for('assignments') }}" class="btn btn-secondary">
+                            <i class="fas fa-times me-2"></i>Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">Assignment Info</h6>
+            </div>
+            <div class="card-body">
+                <p><strong>ID:</strong> ASG-{{ assignment.id }}</p>
+                <p><strong>Created:</strong> {{ assignment.created_at.strftime('%B %d, %Y') }}</p>
+                <p><strong>Created By:</strong> 
+                    {% for user in users %}
+                        {% if user.id == assignment.created_by %}
+                            {{ user.username }}
+                        {% endif %}
+                    {% endfor %}
+                </p>
+                <p><strong>Current Status:</strong> 
+                    <span class="badge bg-{% if assignment.status == 'Completed' %}success{% elif assignment.status == 'In Progress' %}warning{% elif assignment.status == 'On Hold' %}secondary{% elif assignment.status == 'Cancelled' %}danger{% else %}primary{% endif %}">
+                        {{ assignment.status or 'Assigned' }}
+                    </span>
+                </p>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="mb-0">Priority Guidelines</h6>
+            </div>
+            <div class="card-body">
+                <ul class="small">
+                    <li><strong>Critical:</strong> Urgent, blocking issues</li>
+                    <li><strong>High:</strong> Important, high impact</li>
+                    <li><strong>Medium:</strong> Normal priority</li>
+                    <li><strong>Low:</strong> Nice to have, low impact</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="mb-0">Status Options</h6>
+            </div>
+            <div class="card-body">
+                <ul class="small">
+                    <li><strong>Assigned:</strong> Task assigned, not started</li>
+                    <li><strong>In Progress:</strong> Work in progress</li>
+                    <li><strong>Completed:</strong> Task finished</li>
+                    <li><strong>On Hold:</strong> Temporarily paused</li>
+                    <li><strong>Cancelled:</strong> Task cancelled</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

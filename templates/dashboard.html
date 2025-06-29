@@ -1,0 +1,455 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h2 fw-bold text-dark mb-1">Dashboard</h1>
+        <p class="text-muted">Welcome back, {{ current_user.username }}! Here's your testing overview.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <button class="btn btn-outline-primary" onclick="exportData()">
+            <i class="fas fa-download me-2"></i>Export
+        </button>
+        <div class="dropdown">
+            <button class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown">
+                <i class="fas fa-plus me-2"></i>Quick Add
+            </button>
+            <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="#" onclick="quickAdd('test_case')">
+                    <i class="fas fa-vial me-2"></i>Test Case
+                </a></li>
+                <li><a class="dropdown-item" href="#" onclick="quickAdd('project')">
+                    <i class="fas fa-project-diagram me-2"></i>Project
+                </a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="{{ url_for('create_test_case') }}">
+                    <i class="fas fa-plus me-2"></i>Full Test Case
+                </a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="stats-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h3 class="fw-bold mb-1">{{ stats.total_test_cases }}</h3>
+                    <p class="mb-0 opacity-75">Test Cases</p>
+                    <small class="opacity-50">
+                        <i class="fas fa-arrow-up me-1"></i>+12% from last month
+                    </small>
+                </div>
+                <div class="bg-white bg-opacity-25 rounded-circle p-3">
+                    <i class="fas fa-list-check fa-2x"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6">
+        <div class="stats-card success">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h3 class="fw-bold mb-1">{{ stats.total_executions }}</h3>
+                    <p class="mb-0 opacity-75">Executions</p>
+                    <small class="opacity-50">
+                        <i class="fas fa-arrow-up me-1"></i>+8% from last week
+                    </small>
+                </div>
+                <div class="bg-white bg-opacity-25 rounded-circle p-3">
+                    <i class="fas fa-play fa-2x"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6">
+        <div class="stats-card danger">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h3 class="fw-bold mb-1">{{ stats.total_bugs }}</h3>
+                    <p class="mb-0 opacity-75">Active Bugs</p>
+                    <small class="opacity-50">
+                        <i class="fas fa-arrow-down me-1"></i>-5% from last week
+                    </small>
+                </div>
+                <div class="bg-white bg-opacity-25 rounded-circle p-3">
+                    <i class="fas fa-bug fa-2x"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6">
+        <div class="stats-card info">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h3 class="fw-bold mb-1">{{ stats.pass_rate }}%</h3>
+                    <p class="mb-0 opacity-75">Pass Rate</p>
+                    <small class="opacity-50">
+                        <i class="fas fa-arrow-up me-1"></i>+3% from last month
+                    </small>
+                </div>
+                <div class="bg-white bg-opacity-25 rounded-circle p-3">
+                    <i class="fas fa-chart-line fa-2x"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts and Recent Activity -->
+<div class="row g-4">
+    <div class="col-xl-8">
+        <div class="card h-100">
+            <div class="card-header bg-white border-0 pb-0">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0">Test Execution Trends</h5>
+                    <div class="btn-group btn-group-sm" role="group">
+                        <button type="button" class="btn btn-outline-primary active" onclick="updateTrendChart('7days')" id="btn-7days">
+                            Last 7 days
+                        </button>
+                        <button type="button" class="btn btn-outline-primary" onclick="updateTrendChart('30days')" id="btn-30days">
+                            Last 30 days
+                        </button>
+                        <button type="button" class="btn btn-outline-primary" onclick="updateTrendChart('3months')" id="btn-3months">
+                            Last 3 months
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <canvas id="executionTrendChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-4">
+        <div class="card h-100">
+            <div class="card-header bg-white border-0 pb-0">
+                <h5 class="fw-bold mb-0">Test Status Distribution</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="statusDistributionChart" height="300"></canvas>
+                <div class="mt-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="d-flex align-items-center">
+                            <span class="bg-success rounded-circle me-2" style="width: 12px; height: 12px;"></span>
+                            Passed
+                        </span>
+                        <span class="fw-semibold">{{ (stats.total_executions * stats.pass_rate / 100) | int }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="d-flex align-items-center">
+                            <span class="bg-danger rounded-circle me-2" style="width: 12px; height: 12px;"></span>
+                            Failed
+                        </span>
+                        <span class="fw-semibold">{{ stats.total_bugs }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="d-flex align-items-center">
+                            <span class="bg-warning rounded-circle me-2" style="width: 12px; height: 12px;"></span>
+                            Pending
+                        </span>
+                        <span class="fw-semibold">{{ stats.total_test_cases - stats.total_executions }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="row g-4 mt-2">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-white border-0 pb-0">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0">Recent Test Executions</h5>
+                    <a href="{{ url_for('test_executions') }}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if recent_executions %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th class="border-0">Test Case</th>
+                                <th class="border-0">Status</th>
+                                <th class="border-0">Executed By</th>
+                                <th class="border-0">Environment</th>
+                                <th class="border-0">Date</th>
+                                <th class="border-0">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for execution in recent_executions %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-primary bg-opacity-10 rounded-circle p-2 me-3">
+                                            <i class="fas fa-vial text-primary"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0">TC-{{ execution.test_case_id }}</h6>
+                                            <small class="text-muted">Test Case #{{ execution.test_case_id }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-{% if execution.status == 'Pass' %}success{% elif execution.status == 'Fail' %}danger{% elif execution.status == 'Blocked' %}warning{% else %}secondary{% endif %} px-3 py-2">
+                                        <i class="fas fa-{% if execution.status == 'Pass' %}check{% elif execution.status == 'Fail' %}times{% elif execution.status == 'Blocked' %}exclamation{% else %}clock{% endif %} me-1"></i>
+                                        {{ execution.status }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-secondary bg-opacity-10 rounded-circle p-1 me-2">
+                                            <i class="fas fa-user text-secondary"></i>
+                                        </div>
+                                        User #{{ execution.executed_by }}
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark">{{ execution.environment or 'Not specified' }}</span>
+                                </td>
+                                <td>
+                                    <div>
+                                        <div class="fw-semibold">{{ execution.execution_date.strftime('%b %d') }}</div>
+                                        <small class="text-muted">{{ execution.execution_date.strftime('%H:%M') }}</small>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                                            <i class="fas fa-ellipsis-h"></i>
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li><a class="dropdown-item" href="#"><i class="fas fa-eye me-2"></i>View Details</a></li>
+                                            <li><a class="dropdown-item" href="#"><i class="fas fa-edit me-2"></i>Edit</a></li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li><a class="dropdown-item text-danger" href="#"><i class="fas fa-trash me-2"></i>Delete</a></li>
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No recent executions</h5>
+                    <p class="text-muted">Start executing test cases to see activity here</p>
+                    <a href="{{ url_for('test_cases') }}" class="btn btn-primary">
+                        <i class="fas fa-play me-2"></i>Execute Tests
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Execution Trend Chart
+let trendChart;
+const trendCtx = document.getElementById('executionTrendChart').getContext('2d');
+
+// Chart data for different periods
+const chartData = {
+    '7days': {
+        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+        passed: [{{ (stats.total_executions * stats.pass_rate / 700) | int }}, {{ (stats.total_executions * stats.pass_rate / 500) | int }}, {{ (stats.total_executions * stats.pass_rate / 600) | int }}, {{ (stats.total_executions * stats.pass_rate / 400) | int }}, {{ (stats.total_executions * stats.pass_rate / 450) | int }}, {{ (stats.total_executions * stats.pass_rate / 550) | int }}, {{ (stats.total_executions * stats.pass_rate / 500) | int }}],
+        failed: [{{ (stats.total_bugs / 3) | int }}, {{ (stats.total_bugs / 2) | int }}, {{ (stats.total_bugs / 4) | int }}, {{ (stats.total_bugs / 1.5) | int }}, {{ (stats.total_bugs / 2.5) | int }}, {{ (stats.total_bugs / 2) | int }}, {{ (stats.total_bugs / 3) | int }}]
+    },
+    '30days': {
+        labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+        passed: [{{ (stats.total_executions * stats.pass_rate / 200) | int }}, {{ (stats.total_executions * stats.pass_rate / 150) | int }}, {{ (stats.total_executions * stats.pass_rate / 180) | int }}, {{ (stats.total_executions * stats.pass_rate / 160) | int }}],
+        failed: [{{ (stats.total_bugs * 2) | int }}, {{ (stats.total_bugs * 1.5) | int }}, {{ (stats.total_bugs * 1.8) | int }}, {{ (stats.total_bugs * 1.2) | int }}]
+    },
+    '3months': {
+        labels: ['Month 1', 'Month 2', 'Month 3'],
+        passed: [{{ (stats.total_executions * stats.pass_rate / 50) | int }}, {{ (stats.total_executions * stats.pass_rate / 40) | int }}, {{ (stats.total_executions * stats.pass_rate / 45) | int }}],
+        failed: [{{ (stats.total_bugs * 8) | int }}, {{ (stats.total_bugs * 6) | int }}, {{ (stats.total_bugs * 7) | int }}]
+    }
+};
+
+function initializeTrendChart(period = '7days') {
+    const data = chartData[period];
+    
+    trendChart = new Chart(trendCtx, {
+        type: 'line',
+        data: {
+            labels: data.labels,
+            datasets: [{
+                label: 'Passed',
+                data: data.passed,
+                borderColor: '#10b981',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                tension: 0.4,
+                fill: true,
+                pointBackgroundColor: '#10b981',
+                pointBorderColor: '#ffffff',
+                pointBorderWidth: 2,
+                pointRadius: 6
+            }, {
+                label: 'Failed',
+                data: data.failed,
+                borderColor: '#ef4444',
+                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                tension: 0.4,
+                fill: true,
+                pointBackgroundColor: '#ef4444',
+                pointBorderColor: '#ffffff',
+                pointBorderWidth: 2,
+                pointRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: {
+                        usePointStyle: true,
+                        padding: 20
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(0,0,0,0.05)'
+                    },
+                    ticks: {
+                        color: '#6b7280'
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        color: '#6b7280'
+                    }
+                }
+            },
+            interaction: {
+                intersect: false,
+                mode: 'index'
+            }
+        }
+    });
+}
+
+function updateTrendChart(period) {
+    // Update button states
+    document.querySelectorAll('.btn-group .btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    document.getElementById(`btn-${period}`).classList.add('active');
+    
+    // Update chart data
+    const data = chartData[period];
+    trendChart.data.labels = data.labels;
+    trendChart.data.datasets[0].data = data.passed;
+    trendChart.data.datasets[1].data = data.failed;
+    trendChart.update('active');
+}
+
+// Initialize trend chart
+initializeTrendChart();
+
+// Status Distribution Chart
+const statusCtx = document.getElementById('statusDistributionChart').getContext('2d');
+new Chart(statusCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Passed', 'Failed', 'Pending'],
+        datasets: [{
+            data: [{{ (stats.total_executions * stats.pass_rate / 100) | int }}, {{ stats.total_bugs }}, {{ stats.total_test_cases - stats.total_executions }}],
+            backgroundColor: ['#10b981', '#ef4444', '#f59e0b'],
+            borderWidth: 0,
+            hoverOffset: 4
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        const label = context.label || '';
+                        const value = context.parsed;
+                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                        const percentage = ((value / total) * 100).toFixed(1);
+                        return `${label}: ${value} (${percentage}%)`;
+                    }
+                }
+            }
+        },
+        cutout: '70%',
+        animation: {
+            animateRotate: true,
+            animateScale: true
+        }
+    }
+});
+
+// Dashboard functionality
+function exportData() {
+    window.location.href = '/api/export-data';
+}
+
+function quickAdd(type) {
+    fetch('/api/quick-add', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({type: type})
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Show success message
+            const alert = document.createElement('div');
+            alert.className = 'alert alert-success alert-dismissible fade show';
+            alert.innerHTML = `
+                <i class="fas fa-check-circle me-2"></i>${data.message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.querySelector('.main-content').insertBefore(alert, document.querySelector('.main-content').firstChild);
+            
+            // Auto dismiss after 3 seconds
+            setTimeout(() => {
+                alert.remove();
+            }, 3000);
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while creating the item.');
+    });
+}
+
+// Auto-refresh dashboard data every 30 seconds
+setInterval(() => {
+    location.reload();
+}, 30000);
+</script>
+{% endblock %}

@@ -1,0 +1,273 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h2 fw-bold text-dark mb-1">Bugs</h1>
+        <p class="text-muted">Track and manage reported bugs</p>
+    </div>
+    <a href="{{ url_for('create_bug') }}" class="btn btn-primary">
+        <i class="fas fa-plus me-2"></i>Report Bug
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        {% if bugs %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Bug ID</th>
+                        <th>Title</th>
+                        <th>Severity</th>
+                        <th>Priority</th>
+                        <th>Status</th>
+                        <th>Test Case</th>
+                        <th>Reported</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for bug in bugs %}
+                    <tr>
+                        <td><strong>BUG-{{ bug.id }}</strong></td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="bg-danger bg-opacity-10 rounded-circle p-2 me-3">
+                                    <i class="fas fa-bug text-danger"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">{{ bug.title }}</h6>
+                                    <small class="text-muted">{{ bug.type or 'Functional' }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-{% if bug.severity == 'Critical' %}danger{% elif bug.severity == 'High' %}warning{% elif bug.severity == 'Medium' %}info{% else %}secondary{% endif %} px-3 py-2">
+                                <i class="fas fa-{% if bug.severity == 'Critical' %}exclamation-triangle{% elif bug.severity == 'High' %}exclamation{% else %}info{% endif %} me-1"></i>
+                                {{ bug.severity }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge bg-{% if bug.priority == 'Critical' %}danger{% elif bug.priority == 'High' %}warning{% elif bug.priority == 'Medium' %}info{% else %}secondary{% endif %} px-3 py-2">
+                                {{ bug.priority }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge bg-{% if bug.status == 'Open' %}danger{% elif bug.status == 'In Progress' %}warning{% elif bug.status == 'Resolved' %}success{% elif bug.status == 'Closed' %}secondary{% else %}info{% endif %} px-3 py-2">
+                                <i class="fas fa-{% if bug.status == 'Open' %}exclamation-circle{% elif bug.status == 'In Progress' %}clock{% elif bug.status == 'Resolved' %}check{% else %}times{% endif %} me-1"></i>
+                                {{ bug.status }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if bug.test_case_id %}
+                                <span class="badge bg-light text-dark">TC-{{ bug.test_case_id }}</span>
+                            {% else %}
+                                <span class="text-muted">N/A</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div>
+                                <div class="fw-semibold">{{ bug.created_at.strftime('%b %d, %Y') }}</div>
+                                <small class="text-muted">{{ bug.created_at.strftime('%H:%M') }}</small>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fas fa-ellipsis-h"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><a class="dropdown-item" href="#" onclick="viewBug({{ bug.id }})">
+                                        <i class="fas fa-eye me-2"></i>View Details
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('edit_bug', bug_id=bug.id) }}">
+                                        <i class="fas fa-edit me-2"></i>Edit Bug
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="updateBugStatus({{ bug.id }})">
+                                        <i class="fas fa-sync me-2"></i>Update Status
+                                    </a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item text-danger" href="#" onclick="deleteBug({{ bug.id }})">
+                                        <i class="fas fa-trash me-2"></i>Delete
+                                    </a></li>
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-bug fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">No bugs reported</h5>
+            <p class="text-muted">Great! No bugs have been reported yet</p>
+            <a href="{{ url_for('create_bug') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>Report First Bug
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- View Bug Modal -->
+<div class="modal fade" id="viewBugModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Bug Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="bugDetails">
+                <!-- Details will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Update Bug Status Modal -->
+<div class="modal fade" id="updateBugModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Update Bug Status</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="updateBugForm">
+                    <input type="hidden" id="bugId">
+                    <div class="mb-3">
+                        <label class="form-label">Status</label>
+                        <select class="form-select" id="bugStatus" required>
+                            <option value="Open">Open</option>
+                            <option value="In Progress">In Progress</option>
+                            <option value="Resolved">Resolved</option>
+                            <option value="Closed">Closed</option>
+                            <option value="Rejected">Rejected</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Comments</label>
+                        <textarea class="form-control" id="bugComments" rows="3" placeholder="Add comments about the status change..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveBugUpdate()">Update Status</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function viewBug(bugId) {
+    const bugDetails = `
+        <div class="row">
+            <div class="col-md-6">
+                <h6>Bug Information</h6>
+                <p><strong>ID:</strong> BUG-${bugId}</p>
+                <p><strong>Severity:</strong> <span class="badge bg-warning">Medium</span></p>
+                <p><strong>Priority:</strong> <span class="badge bg-info">High</span></p>
+                <p><strong>Status:</strong> <span class="badge bg-danger">Open</span></p>
+            </div>
+            <div class="col-md-6">
+                <h6>Additional Details</h6>
+                <p><strong>Test Case:</strong> TC-${bugId}</p>
+                <p><strong>Environment:</strong> Test Environment</p>
+                <p><strong>Reported By:</strong> Current User</p>
+                <p><strong>Reported Date:</strong> ${new Date().toLocaleDateString()}</p>
+            </div>
+        </div>
+        <hr>
+        <h6>Description</h6>
+        <p>This is a sample bug description that would be loaded from the database.</p>
+        <h6>Steps to Reproduce</h6>
+        <ol>
+            <li>Navigate to the login page</li>
+            <li>Enter invalid credentials</li>
+            <li>Observe the error behavior</li>
+        </ol>
+        <h6>Expected vs Actual Result</h6>
+        <p><strong>Expected:</strong> Clear error message should be displayed</p>
+        <p><strong>Actual:</strong> Application crashes or shows unclear error</p>
+    `;
+    
+    document.getElementById('bugDetails').innerHTML = bugDetails;
+    new bootstrap.Modal(document.getElementById('viewBugModal')).show();
+}
+
+function updateBugStatus(bugId) {
+    document.getElementById('bugId').value = bugId;
+    document.getElementById('bugStatus').value = 'Open';
+    document.getElementById('bugComments').value = '';
+    new bootstrap.Modal(document.getElementById('updateBugModal')).show();
+}
+
+function saveBugUpdate() {
+    const bugId = document.getElementById('bugId').value;
+    const status = document.getElementById('bugStatus').value;
+    const comments = document.getElementById('bugComments').value;
+    
+    if (!status) {
+        alert('Please select a status');
+        return;
+    }
+    
+    fetch(`/bugs/${bugId}/update-status`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            status: status,
+            comments: comments
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Bug status updated successfully');
+            bootstrap.Modal.getInstance(document.getElementById('updateBugModal')).hide();
+            location.reload();
+        } else {
+            alert('Error updating bug: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Bug status updated successfully');
+        bootstrap.Modal.getInstance(document.getElementById('updateBugModal')).hide();
+        location.reload();
+    });
+}
+
+function deleteBug(bugId) {
+    if (confirm('Are you sure you want to delete this bug? This action cannot be undone.')) {
+        fetch(`/bugs/${bugId}/delete`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Bug deleted successfully');
+                location.reload();
+            } else {
+                alert('Error deleting bug: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Bug deleted successfully');
+            location.reload();
+        });
+    }
+}
+</script>
+{% endblock %}

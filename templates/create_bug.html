@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h2 fw-bold text-dark mb-1">Report Bug</h1>
+        <p class="text-muted">Report a new bug or issue</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                <label for="title" class="form-label fw-semibold">Bug Title</label>
+                                <input type="text" class="form-control" id="title" name="title" required placeholder="Brief description of the bug">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="severity" class="form-label fw-semibold">Severity</label>
+                                <select class="form-select" id="severity" name="severity" required>
+                                    <option value="">Select Severity</option>
+                                    <option value="Low">Low</option>
+                                    <option value="Medium">Medium</option>
+                                    <option value="High">High</option>
+                                    <option value="Critical">Critical</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="priority" class="form-label fw-semibold">Priority</label>
+                                <select class="form-select" id="priority" name="priority" required>
+                                    <option value="">Select Priority</option>
+                                    <option value="Low">Low</option>
+                                    <option value="Medium">Medium</option>
+                                    <option value="High">High</option>
+                                    <option value="Critical">Critical</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="type" class="form-label fw-semibold">Bug Type</label>
+                                <select class="form-select" id="type" name="type">
+                                    <option value="Functional">Functional</option>
+                                    <option value="UI/UX">UI/UX</option>
+                                    <option value="Performance">Performance</option>
+                                    <option value="Security">Security</option>
+                                    <option value="Compatibility">Compatibility</option>
+                                    <option value="Data">Data</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="test_case_id" class="form-label fw-semibold">Related Test Case (Optional)</label>
+                        <select class="form-select" id="test_case_id" name="test_case_id">
+                            <option value="">Select Test Case</option>
+                            {% for test_case in test_cases %}
+                            <option value="{{ test_case.id }}">TC-{{ test_case.id }}: {{ test_case.title }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label fw-semibold">Bug Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="4" required placeholder="Detailed description of the bug"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="steps_to_reproduce" class="form-label fw-semibold">Steps to Reproduce</label>
+                        <textarea class="form-control" id="steps_to_reproduce" name="steps_to_reproduce" rows="4" placeholder="1. Step one&#10;2. Step two&#10;3. Step three"></textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="expected_result" class="form-label fw-semibold">Expected Result</label>
+                                <textarea class="form-control" id="expected_result" name="expected_result" rows="3" placeholder="What should happen"></textarea>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="actual_result" class="form-label fw-semibold">Actual Result</label>
+                                <textarea class="form-control" id="actual_result" name="actual_result" rows="3" placeholder="What actually happens"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="environment" class="form-label fw-semibold">Environment</label>
+                        <input type="text" class="form-control" id="environment" name="environment" placeholder="Browser, OS, Device, etc.">
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-bug me-2"></i>Report Bug
+                        </button>
+                        <a href="{{ url_for('bugs') }}" class="btn btn-secondary">
+                            <i class="fas fa-times me-2"></i>Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">Bug Reporting Guidelines</h6>
+            </div>
+            <div class="card-body">
+                <h6 class="text-primary">Severity Levels</h6>
+                <ul class="small">
+                    <li><strong>Critical:</strong> System crash, data loss</li>
+                    <li><strong>High:</strong> Major functionality broken</li>
+                    <li><strong>Medium:</strong> Minor functionality issues</li>
+                    <li><strong>Low:</strong> Cosmetic or enhancement</li>
+                </ul>
+                
+                <h6 class="text-primary mt-3">Priority Levels</h6>
+                <ul class="small">
+                    <li><strong>Critical:</strong> Fix immediately</li>
+                    <li><strong>High:</strong> Fix in current release</li>
+                    <li><strong>Medium:</strong> Fix in next release</li>
+                    <li><strong>Low:</strong> Fix when time permits</li>
+                </ul>
+                
+                <div class="alert alert-info mt-3">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    <strong>Tip:</strong> Provide clear steps to reproduce the bug for faster resolution.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

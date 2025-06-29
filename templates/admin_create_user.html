@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h2 fw-bold text-dark mb-1">Create User</h1>
+        <p class="text-muted">Add a new user to the system</p>
+    </div>
+    <a href="{{ url_for('admin') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-2"></i>Back to Admin
+    </a>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">User Information</h6>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="username" class="form-label fw-semibold">Username</label>
+                            <input type="text" class="form-control" id="username" name="username" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="email" class="form-label fw-semibold">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="password" class="form-label fw-semibold">Password</label>
+                            <input type="password" class="form-control" id="password" name="password" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="role" class="form-label fw-semibold">Role</label>
+                            <select class="form-select" id="role" name="role" required>
+                                <option value="tester">Tester</option>
+                                <option value="developer">Developer</option>
+                                <option value="manager">Manager</option>
+                            </select>
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Admin role cannot be created - only one admin allowed
+                            </small>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-user-plus me-2"></i>Create User
+                        </button>
+                        <a href="{{ url_for('admin') }}" class="btn btn-secondary">
+                            <i class="fas fa-times me-2"></i>Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">Role Descriptions</h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <h6 class="text-primary">
+                        <i class="fas fa-vial me-2"></i>Tester
+                    </h6>
+                    <small class="text-muted">Can create and execute test cases, report bugs</small>
+                </div>
+                <div class="mb-3">
+                    <h6 class="text-info">
+                        <i class="fas fa-code me-2"></i>Developer
+                    </h6>
+                    <small class="text-muted">Can view test cases, fix bugs, access development features</small>
+                </div>
+                <div class="mb-3">
+                    <h6 class="text-warning">
+                        <i class="fas fa-users me-2"></i>Manager
+                    </h6>
+                    <small class="text-muted">Can manage assignments, view reports, oversee projects</small>
+                </div>
+                <div class="alert alert-info">
+                    <i class="fas fa-crown me-2"></i>
+                    <strong>Admin:</strong> Only one admin exists with full system control
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

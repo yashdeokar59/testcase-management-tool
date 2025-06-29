@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h2 fw-bold text-dark mb-1">My Profile</h1>
+        <p class="text-muted">Manage your account settings and preferences</p>
+    </div>
+    <a href="{{ url_for('edit_profile') }}" class="btn btn-primary">
+        <i class="fas fa-edit me-2"></i>Edit Profile
+    </a>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <div class="bg-primary bg-opacity-10 rounded-circle p-4 d-inline-flex mb-3">
+                    <i class="fas fa-user fa-3x text-primary"></i>
+                </div>
+                <h4 class="fw-bold">{{ current_user.username }}</h4>
+                <p class="text-muted mb-3">{{ current_user.role.title() }}</p>
+                <span class="badge bg-{% if current_user.is_active %}success{% else %}danger{% endif %} px-3 py-2">
+                    {% if current_user.is_active %}Active{% else %}Inactive{% endif %}
+                </span>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6 class="mb-0">Quick Stats</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span>Test Cases Created</span>
+                    <span class="fw-bold">0</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span>Tests Executed</span>
+                    <span class="fw-bold">0</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span>Bugs Reported</span>
+                    <span class="fw-bold">0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">Profile Information</h6>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Username</label>
+                        <p class="form-control-plaintext">{{ current_user.username }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Email</label>
+                        <p class="form-control-plaintext">{{ current_user.email }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Role</label>
+                        <p class="form-control-plaintext">
+                            <span class="badge bg-{% if current_user.role == 'admin' %}danger{% elif current_user.role == 'manager' %}warning{% elif current_user.role == 'developer' %}info{% else %}secondary{% endif %}">
+                                {{ current_user.role.title() }}
+                            </span>
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Member Since</label>
+                        <p class="form-control-plaintext">{{ current_user.created_at.strftime('%B %d, %Y') }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Phone</label>
+                        <p class="form-control-plaintext">{{ current_user.phone or 'Not provided' }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Department</label>
+                        <p class="form-control-plaintext">{{ current_user.department or 'Not specified' }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6 class="mb-0">Recent Activity</h6>
+            </div>
+            <div class="card-body">
+                <div class="text-center py-4">
+                    <i class="fas fa-history fa-2x text-muted mb-3"></i>
+                    <p class="text-muted">No recent activity to display</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

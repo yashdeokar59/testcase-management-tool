@@ -1,0 +1,440 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h2 fw-bold text-dark mb-1">Requirements</h1>
+        <p class="text-muted">Manage project requirements and link them to test cases</p>
+    </div>
+    <a href="{{ url_for('create_requirement') }}" class="btn btn-primary">
+        <i class="fas fa-plus me-2"></i>Add Requirement
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        {% if requirements %}
+        <!-- Bulk Actions Bar -->
+        <div id="bulkActions" class="alert alert-info" style="display: none;">
+            <div class="d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-check-square me-2"></i><span id="selectedCount">0</span> requirement(s) selected</span>
+                <button class="btn btn-danger btn-sm" onclick="bulkDeleteRequirements()">
+                    <i class="fas fa-trash me-2"></i>Delete Selected
+                </button>
+            </div>
+        </div>
+        
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th width="40">
+                            <input type="checkbox" id="selectAll" class="form-check-input">
+                        </th>
+                        <th>ID</th>
+                        <th>Title</th>
+                        <th>Type</th>
+                        <th>Priority</th>
+                        <th>Status</th>
+                        <th>Project</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for req in requirements %}
+                    <tr data-requirement-id="{{ req.id }}">
+                        <td>
+                            <input type="checkbox" name="requirement_ids" value="{{ req.id }}" class="form-check-input">
+                        </td>
+                        <td><strong>REQ-{{ req.id }}</strong></td>
+                        <td>{{ req.title }}</td>
+                        <td><span class="badge bg-info">{{ req.type }}</span></td>
+                        <td>
+                            <span class="badge bg-{% if req.priority == 'High' %}danger{% elif req.priority == 'Medium' %}warning{% else %}success{% endif %}">
+                                {{ req.priority }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge bg-{% if req.status == 'Approved' %}success{% elif req.status == 'Draft' %}secondary{% else %}warning{% endif %}">
+                                {{ req.status }}
+                            </span>
+                        </td>
+                        <td>
+                            {% for project in projects %}
+                                {% if project.id == req.project_id %}{{ project.name }}{% endif %}
+                            {% endfor %}
+                        </td>
+                        <td>{{ req.created_at.strftime('%Y-%m-%d') }}</td>
+                        <td>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Actions
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><a class="dropdown-item" href="#" onclick="viewRequirement({{ req.id }})">
+                                        <i class="fas fa-eye me-2"></i>View
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('edit_requirement', req_id=req.id) }}">
+                                        <i class="fas fa-edit me-2"></i>Edit
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="linkTestCases({{ req.id }})">
+                                        <i class="fas fa-link me-2"></i>Link Test Cases
+                                    </a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item text-danger" href="#" onclick="deleteRequirement({{ req.id }})">
+                                        <i class="fas fa-trash me-2"></i>Delete
+                                    </a></li>
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">No requirements found</h5>
+            <p class="text-muted">Create your first requirement to get started</p>
+            <a href="{{ url_for('create_requirement') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>Add Requirement
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- View Requirement Modal -->
+<div class="modal fade" id="viewRequirementModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Requirement Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="requirementDetails">
+                <!-- Details will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Link Test Cases Modal -->
+<div class="modal fade" id="linkTestCasesModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Link Test Cases</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="linkTestCasesForm">
+                    <input type="hidden" id="requirementId">
+                    <div class="mb-3">
+                        <label class="form-label">Select Test Cases</label>
+                        <div id="testCasesList">
+                            <!-- Test cases will be loaded here -->
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveLinkTestCases()">Link Test Cases</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function viewRequirement(reqId) {
+    // Show loading state
+    document.getElementById('requirementDetails').innerHTML = `
+        <div class="text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Loading requirement details...</p>
+        </div>
+    `;
+    
+    // Show modal immediately
+    new bootstrap.Modal(document.getElementById('viewRequirementModal')).show();
+    
+    // Fetch actual requirement data
+    fetch(`/requirements/${reqId}/view`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const req = data.requirement;
+                const linkedTestCasesHtml = req.linked_test_cases.length > 0 
+                    ? req.linked_test_cases.map(tc => 
+                        `<div class="badge bg-secondary me-2 mb-2">
+                            <i class="fas fa-vial me-1"></i>TC-${tc.id}: ${tc.title}
+                        </div>`
+                      ).join('')
+                    : '<div class="alert alert-info"><i class="fas fa-info-circle me-2"></i>No test cases linked to this requirement yet.</div>';
+                
+                const requirementDetails = `
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Basic Information</h6>
+                            <p><strong>ID:</strong> REQ-${req.id}</p>
+                            <p><strong>Type:</strong> ${req.type}</p>
+                            <p><strong>Priority:</strong> <span class="badge bg-${getPriorityColor(req.priority)}">${req.priority}</span></p>
+                            <p><strong>Status:</strong> <span class="badge bg-${getStatusColor(req.status)}">${req.status}</span></p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Project Information</h6>
+                            <p><strong>Project:</strong> ${req.project_name}</p>
+                            <p><strong>Created By:</strong> ${req.created_by}</p>
+                            <p><strong>Created Date:</strong> ${req.created_at}</p>
+                        </div>
+                    </div>
+                    <hr>
+                    <h6>Description</h6>
+                    <p>${req.description || 'No description provided.'}</p>
+                    <h6>Linked Test Cases (${req.linked_test_cases.length})</h6>
+                    ${linkedTestCasesHtml}
+                `;
+                
+                document.getElementById('requirementDetails').innerHTML = requirementDetails;
+            } else {
+                document.getElementById('requirementDetails').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Error loading requirement: ${data.message}
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            document.getElementById('requirementDetails').innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Error loading requirement details. Please try again.
+                </div>
+            `;
+        });
+}
+
+function linkTestCases(reqId) {
+    document.getElementById('requirementId').value = reqId;
+    
+    // Show loading state
+    document.getElementById('testCasesList').innerHTML = `
+        <div class="text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Loading test cases...</p>
+        </div>
+    `;
+    
+    // Show modal
+    new bootstrap.Modal(document.getElementById('linkTestCasesModal')).show();
+    
+    // Fetch available test cases
+    fetch(`/requirements/${reqId}/test-cases`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const testCasesHtml = data.test_cases.length > 0 
+                    ? data.test_cases.map(tc => `
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" value="${tc.id}" id="tc${tc.id}" ${tc.is_linked ? 'checked' : ''}>
+                            <label class="form-check-label" for="tc${tc.id}">
+                                <strong>TC-${tc.id}:</strong> ${tc.title}
+                                <span class="badge bg-${getPriorityColor(tc.priority)} ms-2">${tc.priority}</span>
+                            </label>
+                        </div>
+                      `).join('')
+                    : '<div class="alert alert-info"><i class="fas fa-info-circle me-2"></i>No test cases available for linking.</div>';
+                
+                document.getElementById('testCasesList').innerHTML = testCasesHtml;
+            } else {
+                document.getElementById('testCasesList').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Error loading test cases: ${data.message}
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            document.getElementById('testCasesList').innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Error loading test cases. Please try again.
+                </div>
+            `;
+        });
+}
+
+function saveLinkTestCases() {
+    const reqId = document.getElementById('requirementId').value;
+    const checkboxes = document.querySelectorAll('#testCasesList input[type="checkbox"]:checked');
+    const testCaseIds = Array.from(checkboxes).map(cb => parseInt(cb.value));
+    
+    // Show loading state
+    const saveBtn = document.querySelector('#linkTestCasesModal .btn-primary');
+    const originalText = saveBtn.innerHTML;
+    saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
+    saveBtn.disabled = true;
+    
+    fetch(`/requirements/${reqId}/link-test-cases`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ test_case_ids: testCaseIds })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(data.message, 'success');
+            bootstrap.Modal.getInstance(document.getElementById('linkTestCasesModal')).hide();
+            // Refresh the page to show updated data
+            location.reload();
+        } else {
+            showNotification(data.message, 'error');
+        }
+    })
+    .catch(error => {
+        showNotification('Error linking test cases. Please try again.', 'error');
+    })
+    .finally(() => {
+        saveBtn.innerHTML = originalText;
+        saveBtn.disabled = false;
+    });
+}
+
+function deleteRequirement(reqId) {
+    if (confirm('Are you sure you want to delete this requirement? This action cannot be undone and will also unlink all associated test cases.')) {
+        fetch(`/requirements/${reqId}/delete`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification(data.message, 'success');
+                // Remove the row from the table
+                const row = document.querySelector(`tr[data-requirement-id="${reqId}"]`);
+                if (row) {
+                    row.remove();
+                }
+                // If no more rows, show empty state
+                const tbody = document.querySelector('table tbody');
+                if (tbody && tbody.children.length === 0) {
+                    location.reload();
+                }
+            } else {
+                showNotification(data.message, 'error');
+            }
+        })
+        .catch(error => {
+            showNotification('Error deleting requirement. Please try again.', 'error');
+        });
+    }
+}
+
+function editRequirement(reqId) {
+    window.location.href = `/requirements/${reqId}/edit`;
+}
+
+// Helper functions for styling
+function getPriorityColor(priority) {
+    switch(priority.toLowerCase()) {
+        case 'high': return 'danger';
+        case 'medium': return 'warning';
+        case 'low': return 'success';
+        default: return 'secondary';
+    }
+}
+
+function getStatusColor(status) {
+    switch(status.toLowerCase()) {
+        case 'approved': return 'success';
+        case 'draft': return 'secondary';
+        case 'review': return 'warning';
+        case 'rejected': return 'danger';
+        default: return 'secondary';
+    }
+}
+
+// Bulk delete functionality
+function toggleBulkActions() {
+    const checkboxes = document.querySelectorAll('input[name="requirement_ids"]:checked');
+    const bulkActions = document.getElementById('bulkActions');
+    
+    if (checkboxes.length > 0) {
+        bulkActions.style.display = 'block';
+        document.getElementById('selectedCount').textContent = checkboxes.length;
+    } else {
+        bulkActions.style.display = 'none';
+    }
+}
+
+function selectAllRequirements() {
+    const selectAll = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('input[name="requirement_ids"]');
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAll.checked;
+    });
+    
+    toggleBulkActions();
+}
+
+function bulkDeleteRequirements() {
+    const checkboxes = document.querySelectorAll('input[name="requirement_ids"]:checked');
+    const requirementIds = Array.from(checkboxes).map(cb => parseInt(cb.value));
+    
+    if (requirementIds.length === 0) {
+        showNotification('Please select requirements to delete.', 'warning');
+        return;
+    }
+    
+    if (confirm(`Are you sure you want to delete ${requirementIds.length} requirement(s)? This action cannot be undone.`)) {
+        fetch('/requirements/bulk-delete', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ requirement_ids: requirementIds })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification(data.message, 'success');
+                location.reload();
+            } else {
+                showNotification(data.message, 'error');
+            }
+        })
+        .catch(error => {
+            showNotification('Error deleting requirements. Please try again.', 'error');
+        });
+    }
+}
+
+// Initialize page
+document.addEventListener('DOMContentLoaded', function() {
+    // Add event listeners for checkboxes
+    const checkboxes = document.querySelectorAll('input[name="requirement_ids"]');
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', toggleBulkActions);
+    });
+    
+    const selectAll = document.getElementById('selectAll');
+    if (selectAll) {
+        selectAll.addEventListener('change', selectAllRequirements);
+    }
+});
+</script>
+{% endblock %}

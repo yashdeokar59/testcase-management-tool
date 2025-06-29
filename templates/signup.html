@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block auth_content %}
+<div class="min-vh-100 d-flex align-items-center justify-content-center" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-10 col-lg-8">
+                <div class="card shadow-lg border-0" style="border-radius: 20px; overflow: hidden;">
+                    <div class="row g-0">
+                        <div class="col-md-6 d-flex align-items-center justify-content-center p-5" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                            <div class="text-white text-center">
+                                <div class="mb-4">
+                                    <i class="fas fa-user-plus fa-4x mb-3"></i>
+                                    <h2 class="fw-bold">Join TestPro</h2>
+                                    <p class="lead">Start managing your tests professionally</p>
+                                </div>
+                                <div class="row text-center">
+                                    <div class="col-6">
+                                        <i class="fas fa-rocket fa-2x mb-2"></i>
+                                        <p class="small">Fast Setup</p>
+                                    </div>
+                                    <div class="col-6">
+                                        <i class="fas fa-shield-alt fa-2x mb-2"></i>
+                                        <p class="small">Secure</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 p-5">
+                            <div class="text-center mb-4">
+                                <h3 class="fw-bold text-dark">Create Account</h3>
+                                <p class="text-muted">Join our testing community</p>
+                            </div>
+                            
+                            {% with messages = get_flashed_messages(with_categories=true) %}
+                                {% if messages %}
+                                    {% for category, message in messages %}
+                                        <div class="alert alert-{{ 'danger' if category == 'error' else 'warning' }} alert-dismissible fade show" role="alert">
+                                            <i class="fas fa-exclamation-triangle me-2"></i>{{ message }}
+                                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                        </div>
+                                    {% endfor %}
+                                {% endif %}
+                            {% endwith %}
+                            
+                            <form method="POST" class="needs-validation" novalidate>
+                                <div class="mb-3">
+                                    <label for="username" class="form-label fw-semibold">Username</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-end-0">
+                                            <i class="fas fa-user text-muted"></i>
+                                        </span>
+                                        <input type="text" class="form-control border-start-0" id="username" name="username" placeholder="Choose a username" required>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="email" class="form-label fw-semibold">Email</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-end-0">
+                                            <i class="fas fa-envelope text-muted"></i>
+                                        </span>
+                                        <input type="email" class="form-control border-start-0" id="email" name="email" placeholder="Enter your email" required>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="password" class="form-label fw-semibold">Password</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-end-0">
+                                            <i class="fas fa-lock text-muted"></i>
+                                        </span>
+                                        <input type="password" class="form-control border-start-0" id="password" name="password" placeholder="Create a password" required>
+                                    </div>
+                                </div>
+                                <div class="mb-4">
+                                    <label for="role" class="form-label fw-semibold">Role</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-end-0">
+                                            <i class="fas fa-user-tag text-muted"></i>
+                                        </span>
+                                        <select class="form-select border-start-0" id="role" name="role" required>
+                                            <option value="tester">Tester</option>
+                                            <option value="developer">Developer</option>
+                                            <option value="manager">Manager</option>
+                                            {% if not admin_exists %}
+                                            <option value="admin">Admin</option>
+                                            {% endif %}
+                                        </select>
+                                    </div>
+                                    {% if admin_exists %}
+                                    <small class="text-muted">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Admin role is not available - only one admin allowed
+                                    </small>
+                                    {% endif %}
+                                </div>
+                                <button type="submit" class="btn btn-success w-100 py-3 mb-3 fw-semibold">
+                                    <i class="fas fa-user-plus me-2"></i>Create Account
+                                </button>
+                            </form>
+                            
+                            <div class="text-center">
+                                <p class="text-muted mb-0">Already have an account?</p>
+                                <a href="{{ url_for('login') }}" class="text-decoration-none fw-semibold">Sign In</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

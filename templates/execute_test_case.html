@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Execute Test Case</h1>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Test Case Details</h5>
+            </div>
+            <div class="card-body">
+                <h6><strong>Title:</strong></h6>
+                <p>{{ test_case.title }}</p>
+                
+                <h6><strong>Description:</strong></h6>
+                <p>{{ test_case.description or 'No description' }}</p>
+                
+                <h6><strong>Preconditions:</strong></h6>
+                <p>{{ test_case.preconditions or 'None' }}</p>
+                
+                <h6><strong>Test Steps:</strong></h6>
+                <pre class="bg-light p-2">{{ test_case.test_steps }}</pre>
+                
+                <h6><strong>Expected Result:</strong></h6>
+                <pre class="bg-light p-2">{{ test_case.expected_result }}</pre>
+                
+                {% if test_case.test_data %}
+                <h6><strong>Test Data:</strong></h6>
+                <pre class="bg-light p-2">{{ test_case.test_data }}</pre>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Record Execution</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="status" class="form-label">Execution Status</label>
+                        <select class="form-select" id="status" name="status" required>
+                            <option value="">Select Status</option>
+                            <option value="Pass">Pass</option>
+                            <option value="Fail">Fail</option>
+                            <option value="Blocked">Blocked</option>
+                            <option value="Not Executed">Not Executed</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="environment" class="form-label">Environment</label>
+                        <input type="text" class="form-control" id="environment" name="environment" placeholder="e.g., Production, Staging, Dev">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="actual_result" class="form-label">Actual Result</label>
+                        <textarea class="form-control" id="actual_result" name="actual_result" rows="4" required></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="comments" class="form-label">Comments</label>
+                        <textarea class="form-control" id="comments" name="comments" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="create_bug" name="create_bug">
+                        <label class="form-check-label" for="create_bug">
+                            Create bug if test fails
+                        </label>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-success">Record Execution</button>
+                    <a href="{{ url_for('test_cases') }}" class="btn btn-secondary">Cancel</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

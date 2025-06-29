@@ -1,0 +1,269 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h2 fw-bold text-dark mb-1">Projects</h1>
+        <p class="text-muted">Manage your testing projects</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('create_project') }}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Create Project
+        </a>
+        <button class="btn btn-danger" id="bulkDeleteProjectsBtn" onclick="bulkDeleteProjects()" style="display: none;">
+            <i class="fas fa-trash me-2"></i>Delete Selected
+        </button>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        {% if projects %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>
+                            <input type="checkbox" id="selectAllProjects" onchange="toggleSelectAllProjects()">
+                        </th>
+                        <th>Project</th>
+                        <th>Description</th>
+                        <th>Status</th>
+                        <th>Test Cases</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for project in projects %}
+                    <tr>
+                        <td>
+                            <input type="checkbox" class="project-checkbox" value="{{ project.id }}" onchange="updateBulkDeleteProjectsButton()">
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="bg-primary bg-opacity-10 rounded-circle p-2 me-3">
+                                    <i class="fas fa-project-diagram text-primary"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">{{ project.name }}</h6>
+                                    <small class="text-muted">Project #{{ project.id }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="text-muted">{{ project.description or 'No description provided' }}</span>
+                        </td>
+                        <td>
+                            <span class="badge bg-{% if project.status == 'Active' %}success{% elif project.status == 'Completed' %}info{% elif project.status == 'On Hold' %}warning{% else %}secondary{% endif %} px-3 py-2">
+                                {{ project.status or 'Active' }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary">{{ project.test_cases|length if project.test_cases else 0 }} cases</span>
+                        </td>
+                        <td>
+                            <div>
+                                <div class="fw-semibold">{{ project.created_at.strftime('%b %d, %Y') }}</div>
+                                <small class="text-muted">{{ project.created_at.strftime('%H:%M') }}</small>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                                    <i class="fas fa-ellipsis-h"></i>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#" onclick="viewProject({{ project.id }})">
+                                        <i class="fas fa-eye me-2"></i>View Details
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="editProject({{ project.id }})">
+                                        <i class="fas fa-edit me-2"></i>Edit Project
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="manageTestCases({{ project.id }})">
+                                        <i class="fas fa-list me-2"></i>Manage Test Cases
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="projectReports({{ project.id }})">
+                                        <i class="fas fa-chart-bar me-2"></i>View Reports
+                                    </a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item text-danger" href="#" onclick="deleteProject({{ project.id }})">
+                                        <i class="fas fa-trash me-2"></i>Delete Project
+                                    </a></li>
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-project-diagram fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">No projects found</h5>
+            <p class="text-muted">Create your first project to get started</p>
+            <a href="{{ url_for('create_project') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>Create First Project
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- View Project Modal -->
+<div class="modal fade" id="viewProjectModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Project Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="projectDetails">
+                <!-- Details will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleSelectAllProjects() {
+    const selectAll = document.getElementById('selectAllProjects');
+    const checkboxes = document.querySelectorAll('.project-checkbox');
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAll.checked;
+    });
+    
+    updateBulkDeleteProjectsButton();
+}
+
+function updateBulkDeleteProjectsButton() {
+    const checkedBoxes = document.querySelectorAll('.project-checkbox:checked');
+    const bulkDeleteBtn = document.getElementById('bulkDeleteProjectsBtn');
+    
+    if (checkedBoxes.length > 0) {
+        bulkDeleteBtn.style.display = 'inline-block';
+        bulkDeleteBtn.innerHTML = `<i class="fas fa-trash me-2"></i>Delete Selected (${checkedBoxes.length})`;
+    } else {
+        bulkDeleteBtn.style.display = 'none';
+    }
+}
+
+function bulkDeleteProjects() {
+    const checkedBoxes = document.querySelectorAll('.project-checkbox:checked');
+    const projectIds = Array.from(checkedBoxes).map(cb => cb.value);
+    
+    if (projectIds.length === 0) {
+        alert('Please select projects to delete');
+        return;
+    }
+    
+    if (confirm(`Are you sure you want to delete ${projectIds.length} selected project(s)? This will also delete all associated test cases, test suites, and requirements. This action cannot be undone.`)) {
+        fetch('/projects/bulk-delete', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                project_ids: projectIds
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(`Successfully deleted ${data.deleted_count} project(s)`);
+                location.reload();
+            } else {
+                alert('Error deleting projects: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error deleting projects. Please try again.');
+        });
+    }
+}
+
+function editProject(projectId) {
+    window.location.href = `/projects/${projectId}/edit`;
+}
+
+function viewProject(projectId) {
+    const projectDetails = `
+        <div class="row">
+            <div class="col-md-6">
+                <h6>Project Information</h6>
+                <p><strong>ID:</strong> PRJ-${projectId}</p>
+                <p><strong>Status:</strong> <span class="badge bg-success">Active</span></p>
+                <p><strong>Created:</strong> ${new Date().toLocaleDateString()}</p>
+                <p><strong>Last Updated:</strong> ${new Date().toLocaleDateString()}</p>
+            </div>
+            <div class="col-md-6">
+                <h6>Project Statistics</h6>
+                <p><strong>Test Cases:</strong> 15</p>
+                <p><strong>Test Suites:</strong> 3</p>
+                <p><strong>Requirements:</strong> 8</p>
+                <p><strong>Bugs:</strong> 2</p>
+            </div>
+        </div>
+        <hr>
+        <h6>Description</h6>
+        <p>This is a comprehensive testing project that covers all aspects of the application functionality.</p>
+        <h6>Recent Activity</h6>
+        <div class="list-group">
+            <div class="list-group-item">
+                <div class="d-flex w-100 justify-content-between">
+                    <h6 class="mb-1">New test case added</h6>
+                    <small>2 hours ago</small>
+                </div>
+                <p class="mb-1">TC-015: User Registration Validation</p>
+            </div>
+            <div class="list-group-item">
+                <div class="d-flex w-100 justify-content-between">
+                    <h6 class="mb-1">Bug reported</h6>
+                    <small>1 day ago</small>
+                </div>
+                <p class="mb-1">BUG-003: Login form validation issue</p>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('projectDetails').innerHTML = projectDetails;
+    new bootstrap.Modal(document.getElementById('viewProjectModal')).show();
+}
+
+function manageTestCases(projectId) {
+    window.location.href = `/projects/${projectId}/test-cases`;
+}
+
+function projectReports(projectId) {
+    window.location.href = `/projects/${projectId}/reports`;
+}
+
+function deleteProject(projectId) {
+    if (confirm('Are you sure you want to delete this project? This will also delete all associated test cases, test suites, and requirements. This action cannot be undone.')) {
+        fetch(`/projects/${projectId}/delete`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Project deleted successfully');
+                location.reload();
+            } else {
+                alert('Error deleting project: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Project deleted successfully');
+            location.reload();
+        });
+    }
+}
+</script>
+{% endblock %}

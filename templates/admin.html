@@ -1,0 +1,352 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h2 fw-bold text-dark mb-1">Admin Panel</h1>
+        <p class="text-muted">Manage users and system settings</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('admin_create_user') }}" class="btn btn-primary">
+            <i class="fas fa-user-plus me-2"></i>Create User
+        </a>
+        {% if user_stats.admins > 1 %}
+        <button class="btn btn-warning" onclick="cleanupAdmins()">
+            <i class="fas fa-broom me-2"></i>Remove Extra Admins
+        </button>
+        {% endif %}
+        <button class="btn btn-danger" id="bulkDeleteBtn" onclick="bulkDeleteUsers()" style="display: none;">
+            <i class="fas fa-trash me-2"></i>Delete Selected
+        </button>
+    </div>
+</div>
+
+<!-- User Statistics -->
+<div class="row g-4 mb-4">
+    <div class="col-xl-2 col-md-4">
+        <div class="stats-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h3 class="fw-bold mb-1">{{ user_stats.total_users }}</h3>
+                    <p class="mb-0 opacity-75">Total Users</p>
+                </div>
+                <div class="bg-white bg-opacity-25 rounded-circle p-3">
+                    <i class="fas fa-users fa-2x"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-2 col-md-4">
+        <div class="stats-card success">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h3 class="fw-bold mb-1">{{ user_stats.active_users }}</h3>
+                    <p class="mb-0 opacity-75">Active</p>
+                </div>
+                <div class="bg-white bg-opacity-25 rounded-circle p-3">
+                    <i class="fas fa-user-check fa-2x"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-2 col-md-4">
+        <div class="stats-card danger">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h3 class="fw-bold mb-1">{{ user_stats.admins }}</h3>
+                    <p class="mb-0 opacity-75">Admins</p>
+                </div>
+                <div class="bg-white bg-opacity-25 rounded-circle p-3">
+                    <i class="fas fa-crown fa-2x"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-2 col-md-4">
+        <div class="stats-card warning">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h3 class="fw-bold mb-1">{{ user_stats.managers }}</h3>
+                    <p class="mb-0 opacity-75">Managers</p>
+                </div>
+                <div class="bg-white bg-opacity-25 rounded-circle p-3">
+                    <i class="fas fa-users-cog fa-2x"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-2 col-md-4">
+        <div class="stats-card info">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h3 class="fw-bold mb-1">{{ user_stats.developers }}</h3>
+                    <p class="mb-0 opacity-75">Developers</p>
+                </div>
+                <div class="bg-white bg-opacity-25 rounded-circle p-3">
+                    <i class="fas fa-code fa-2x"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-2 col-md-4">
+        <div class="stats-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h3 class="fw-bold mb-1">{{ user_stats.testers }}</h3>
+                    <p class="mb-0 opacity-75">Testers</p>
+                </div>
+                <div class="bg-white bg-opacity-25 rounded-circle p-3">
+                    <i class="fas fa-vial fa-2x"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h6 class="mb-0">User Management</h6>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>
+                            <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+                        </th>
+                        <th>User</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td>
+                            {% if user.role != 'admin' %}
+                            <input type="checkbox" class="user-checkbox" value="{{ user.id }}" onchange="updateBulkDeleteButton()">
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="bg-{% if user.role == 'admin' %}danger{% elif user.role == 'manager' %}warning{% elif user.role == 'developer' %}info{% else %}primary{% endif %} bg-opacity-10 rounded-circle p-2 me-3">
+                                    <i class="fas fa-{% if user.role == 'admin' %}crown{% elif user.role == 'manager' %}users-cog{% elif user.role == 'developer' %}code{% else %}vial{% endif %} text-{% if user.role == 'admin' %}danger{% elif user.role == 'manager' %}warning{% elif user.role == 'developer' %}info{% else %}primary{% endif %}"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">{{ user.username }}</h6>
+                                    {% if user.id == current_user.id %}
+                                    <small class="text-muted">(You)</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{ user.email }}</td>
+                        <td>
+                            <span class="badge bg-{% if user.role == 'admin' %}danger{% elif user.role == 'manager' %}warning{% elif user.role == 'developer' %}info{% else %}primary{% endif %} px-3 py-2">
+                                <i class="fas fa-{% if user.role == 'admin' %}crown{% elif user.role == 'manager' %}users-cog{% elif user.role == 'developer' %}code{% else %}vial{% endif %} me-1"></i>
+                                {{ user.role.title() }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if user.is_active %}
+                                <span class="badge bg-success px-3 py-2">
+                                    <i class="fas fa-check me-1"></i>Active
+                                </span>
+                            {% else %}
+                                <span class="badge bg-secondary px-3 py-2">
+                                    <i class="fas fa-times me-1"></i>Inactive
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div>
+                                <div class="fw-semibold">{{ user.created_at.strftime('%b %d, %Y') }}</div>
+                                <small class="text-muted">{{ user.created_at.strftime('%H:%M') }}</small>
+                            </div>
+                        </td>
+                        <td>
+                            {% if user.role != 'admin' %}
+                                <div class="btn-group" role="group">
+                                    <form method="POST" action="{{ url_for('toggle_user_status', user_id=user.id) }}" style="display: inline;">
+                                        <button type="submit" class="btn btn-sm btn-outline-{% if user.is_active %}warning{% else %}success{% endif %}" 
+                                                onclick="return confirm('Are you sure you want to {% if user.is_active %}deactivate{% else %}activate{% endif %} this user?')">
+                                            <i class="fas fa-{% if user.is_active %}pause{% else %}play{% endif %} me-1"></i>
+                                            {% if user.is_active %}Deactivate{% else %}Activate{% endif %}
+                                        </button>
+                                    </form>
+                                    <button class="btn btn-sm btn-outline-danger ms-1" onclick="deleteUser({{ user.id }}, '{{ user.username }}')">
+                                        <i class="fas fa-trash me-1"></i>Delete
+                                    </button>
+                                </div>
+                            {% else %}
+                                <span class="badge bg-danger">
+                                    <i class="fas fa-shield-alt me-1"></i>Protected
+                                </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Session Security Settings -->
+<div class="card mt-4">
+    <div class="card-header">
+        <h6 class="mb-0">Session Security Settings</h6>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="alert alert-info">
+                    <h6><i class="fas fa-shield-alt me-2"></i>Session Timeout</h6>
+                    <p class="mb-2">Current session timeout: <strong>30 minutes</strong></p>
+                    <p class="mb-0 small">Users will be automatically logged out after 30 minutes of inactivity for security.</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="alert alert-success">
+                    <h6><i class="fas fa-clock me-2"></i>Session Features</h6>
+                    <ul class="mb-0 small">
+                        <li>Automatic logout on inactivity</li>
+                        <li>5-minute warning before timeout</li>
+                        <li>Session extension option</li>
+                        <li>Activity tracking</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="alert alert-info">
+            <h6><i class="fas fa-info-circle me-2"></i>Role-Based Access Control</h6>
+            <ul class="mb-0">
+                <li><strong>Admin:</strong> Full system access, user management, system configuration</li>
+                <li><strong>Manager:</strong> Project management, assignments, reports, team oversight</li>
+                <li><strong>Developer:</strong> Test case access, bug management, development features</li>
+                <li><strong>Tester:</strong> Test case creation/execution, bug reporting, basic features</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleSelectAll() {
+    const selectAll = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('.user-checkbox');
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAll.checked;
+    });
+    
+    updateBulkDeleteButton();
+}
+
+function updateBulkDeleteButton() {
+    const checkedBoxes = document.querySelectorAll('.user-checkbox:checked');
+    const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+    
+    if (checkedBoxes.length > 0) {
+        bulkDeleteBtn.style.display = 'inline-block';
+        bulkDeleteBtn.innerHTML = `<i class="fas fa-trash me-2"></i>Delete Selected (${checkedBoxes.length})`;
+    } else {
+        bulkDeleteBtn.style.display = 'none';
+    }
+}
+
+function bulkDeleteUsers() {
+    const checkedBoxes = document.querySelectorAll('.user-checkbox:checked');
+    const userIds = Array.from(checkedBoxes).map(cb => cb.value);
+    
+    if (userIds.length === 0) {
+        alert('Please select users to delete');
+        return;
+    }
+    
+    if (confirm(`Are you sure you want to delete ${userIds.length} selected user(s)? This action cannot be undone.`)) {
+        fetch('/admin/users/bulk-delete', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                user_ids: userIds
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(`Successfully deleted ${data.deleted_count} user(s)`);
+                location.reload();
+            } else {
+                alert('Error deleting users: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error deleting users. Please try again.');
+        });
+    }
+}
+
+function deleteUser(userId, username) {
+    if (confirm(`Are you sure you want to permanently delete user "${username}"? This action cannot be undone and will remove all associated data.`)) {
+        fetch(`/admin/users/${userId}/delete`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('User deleted successfully');
+                location.reload();
+            } else {
+                alert('Error deleting user: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error deleting user. Please try again.');
+        });
+    }
+}
+
+function cleanupAdmins() {
+    if (confirm('This will remove all admin accounts except yours. Are you sure you want to continue?')) {
+        fetch('/admin/cleanup-admins', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert(data.message);
+            if (data.success) {
+                location.reload();
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error cleaning up admin accounts.');
+        });
+    }
+}
+</script>
+{% endblock %}

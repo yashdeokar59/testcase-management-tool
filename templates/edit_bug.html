@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h2 fw-bold text-dark mb-1">Edit Bug</h1>
+        <p class="text-muted">Update bug information</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                <label for="title" class="form-label fw-semibold">Bug Title</label>
+                                <input type="text" class="form-control" id="title" name="title" value="{{ bug.title }}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="severity" class="form-label fw-semibold">Severity</label>
+                                <select class="form-select" id="severity" name="severity" required>
+                                    <option value="Low" {% if bug.severity == 'Low' %}selected{% endif %}>Low</option>
+                                    <option value="Medium" {% if bug.severity == 'Medium' %}selected{% endif %}>Medium</option>
+                                    <option value="High" {% if bug.severity == 'High' %}selected{% endif %}>High</option>
+                                    <option value="Critical" {% if bug.severity == 'Critical' %}selected{% endif %}>Critical</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="priority" class="form-label fw-semibold">Priority</label>
+                                <select class="form-select" id="priority" name="priority" required>
+                                    <option value="Low" {% if bug.priority == 'Low' %}selected{% endif %}>Low</option>
+                                    <option value="Medium" {% if bug.priority == 'Medium' %}selected{% endif %}>Medium</option>
+                                    <option value="High" {% if bug.priority == 'High' %}selected{% endif %}>High</option>
+                                    <option value="Critical" {% if bug.priority == 'Critical' %}selected{% endif %}>Critical</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="status" class="form-label fw-semibold">Status</label>
+                                <select class="form-select" id="status" name="status" required>
+                                    <option value="Open" {% if bug.status == 'Open' %}selected{% endif %}>Open</option>
+                                    <option value="In Progress" {% if bug.status == 'In Progress' %}selected{% endif %}>In Progress</option>
+                                    <option value="Resolved" {% if bug.status == 'Resolved' %}selected{% endif %}>Resolved</option>
+                                    <option value="Closed" {% if bug.status == 'Closed' %}selected{% endif %}>Closed</option>
+                                    <option value="Rejected" {% if bug.status == 'Rejected' %}selected{% endif %}>Rejected</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="type" class="form-label fw-semibold">Bug Type</label>
+                                <select class="form-select" id="type" name="type">
+                                    <option value="Functional" {% if bug.type == 'Functional' %}selected{% endif %}>Functional</option>
+                                    <option value="UI/UX" {% if bug.type == 'UI/UX' %}selected{% endif %}>UI/UX</option>
+                                    <option value="Performance" {% if bug.type == 'Performance' %}selected{% endif %}>Performance</option>
+                                    <option value="Security" {% if bug.type == 'Security' %}selected{% endif %}>Security</option>
+                                    <option value="Compatibility" {% if bug.type == 'Compatibility' %}selected{% endif %}>Compatibility</option>
+                                    <option value="Data" {% if bug.type == 'Data' %}selected{% endif %}>Data</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="test_case_id" class="form-label fw-semibold">Related Test Case</label>
+                                <select class="form-select" id="test_case_id" name="test_case_id">
+                                    <option value="">Select Test Case</option>
+                                    {% for test_case in test_cases %}
+                                    <option value="{{ test_case.id }}" {% if test_case.id == bug.test_case_id %}selected{% endif %}>
+                                        TC-{{ test_case.id }}: {{ test_case.title }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label fw-semibold">Bug Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="4" required>{{ bug.description }}</textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="steps_to_reproduce" class="form-label fw-semibold">Steps to Reproduce</label>
+                        <textarea class="form-control" id="steps_to_reproduce" name="steps_to_reproduce" rows="4">{{ bug.steps_to_reproduce or '' }}</textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="expected_result" class="form-label fw-semibold">Expected Result</label>
+                                <textarea class="form-control" id="expected_result" name="expected_result" rows="3">{{ bug.expected_result or '' }}</textarea>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="actual_result" class="form-label fw-semibold">Actual Result</label>
+                                <textarea class="form-control" id="actual_result" name="actual_result" rows="3">{{ bug.actual_result or '' }}</textarea>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="environment" class="form-label fw-semibold">Environment</label>
+                        <input type="text" class="form-control" id="environment" name="environment" value="{{ bug.environment or '' }}">
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Update Bug
+                        </button>
+                        <a href="{{ url_for('bugs') }}" class="btn btn-secondary">
+                            <i class="fas fa-times me-2"></i>Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">Bug Info</h6>
+            </div>
+            <div class="card-body">
+                <p><strong>ID:</strong> BUG-{{ bug.id }}</p>
+                <p><strong>Created:</strong> {{ bug.created_at.strftime('%B %d, %Y') }}</p>
+                <p><strong>Reported By:</strong> User #{{ bug.reported_by or 'System' }}</p>
+                <p><strong>Current Status:</strong> 
+                    <span class="badge bg-{% if bug.status == 'Open' %}danger{% elif bug.status == 'In Progress' %}warning{% elif bug.status == 'Resolved' %}success{% elif bug.status == 'Closed' %}secondary{% else %}info{% endif %}">
+                        {{ bug.status }}
+                    </span>
+                </p>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="mb-0">Severity Guidelines</h6>
+            </div>
+            <div class="card-body">
+                <ul class="small">
+                    <li><strong>Critical:</strong> System crash, data loss</li>
+                    <li><strong>High:</strong> Major functionality broken</li>
+                    <li><strong>Medium:</strong> Minor functionality issues</li>
+                    <li><strong>Low:</strong> Cosmetic or enhancement</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="mb-0">Status Options</h6>
+            </div>
+            <div class="card-body">
+                <ul class="small">
+                    <li><strong>Open:</strong> Bug reported, not started</li>
+                    <li><strong>In Progress:</strong> Bug being worked on</li>
+                    <li><strong>Resolved:</strong> Bug fixed, pending verification</li>
+                    <li><strong>Closed:</strong> Bug verified and closed</li>
+                    <li><strong>Rejected:</strong> Not a valid bug</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

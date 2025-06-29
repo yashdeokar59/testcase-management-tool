@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Edit Test Case</h1>
+</div>
+
+<div class="row">
+    <div class="col-md-10">
+        <div class="card">
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                <label for="title" class="form-label">Test Case Title</label>
+                                <input type="text" class="form-control" id="title" name="title" value="{{ test_case.title }}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="priority" class="form-label">Priority</label>
+                                <select class="form-select" id="priority" name="priority">
+                                    <option value="Low" {% if test_case.priority == 'Low' %}selected{% endif %}>Low</option>
+                                    <option value="Medium" {% if test_case.priority == 'Medium' %}selected{% endif %}>Medium</option>
+                                    <option value="High" {% if test_case.priority == 'High' %}selected{% endif %}>High</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="suite_id" class="form-label">Test Suite</label>
+                        <select class="form-select" id="suite_id" name="suite_id" required>
+                            {% for suite in suites %}
+                            <option value="{{ suite.id }}" {% if suite.id == test_case.suite_id %}selected{% endif %}>{{ suite.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="3">{{ test_case.description or '' }}</textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="preconditions" class="form-label">Preconditions</label>
+                        <textarea class="form-control" id="preconditions" name="preconditions" rows="3">{{ test_case.preconditions or '' }}</textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="test_steps" class="form-label">Test Steps</label>
+                        <textarea class="form-control" id="test_steps" name="test_steps" rows="5" required>{{ test_case.test_steps or '' }}</textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="expected_result" class="form-label">Expected Result</label>
+                        <textarea class="form-control" id="expected_result" name="expected_result" rows="3" required>{{ test_case.expected_result or '' }}</textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="test_data" class="form-label">Test Data</label>
+                        <textarea class="form-control" id="test_data" name="test_data" rows="3">{{ test_case.test_data or '' }}</textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">Update Test Case</button>
+                    <a href="{{ url_for('test_cases') }}" class="btn btn-secondary">Cancel</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

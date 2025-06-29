@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Reports & Analytics</h1>
+    <button class="btn btn-success" onclick="exportReport()">
+        <i class="fas fa-download"></i> Export Report
+    </button>
+</div>
+
+<div class="row">
+    <div class="col-md-3 mb-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h2 class="text-primary">{{ report_data.total_cases }}</h2>
+                <p class="card-text">Total Test Cases</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h2 class="text-info">{{ report_data.total_executions }}</h2>
+                <p class="card-text">Total Executions</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h2 class="text-success">{{ report_data.pass_rate }}%</h2>
+                <p class="card-text">Pass Rate</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h2 class="text-danger">{{ report_data.failed }}</h2>
+                <p class="card-text">Failed Tests</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Test Execution Status</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="statusChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Test Coverage Metrics</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">Test Coverage</label>
+                    <div class="progress">
+                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ report_data.pass_rate }}%">
+                            {{ report_data.pass_rate }}%
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row text-center">
+                    <div class="col">
+                        <h6 class="text-success">{{ report_data.passed }}</h6>
+                        <small>Passed</small>
+                    </div>
+                    <div class="col">
+                        <h6 class="text-danger">{{ report_data.failed }}</h6>
+                        <small>Failed</small>
+                    </div>
+                    <div class="col">
+                        <h6 class="text-warning">{{ report_data.blocked }}</h6>
+                        <small>Blocked</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const ctx = document.getElementById('statusChart').getContext('2d');
+const statusChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Passed', 'Failed', 'Blocked'],
+        datasets: [{
+            data: [{{ report_data.passed }}, {{ report_data.failed }}, {{ report_data.blocked }}],
+            backgroundColor: ['#28a745', '#dc3545', '#ffc107']
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false
+    }
+});
+
+function exportReport() {
+    // Simple CSV export functionality
+    const data = [
+        ['Metric', 'Value'],
+        ['Total Test Cases', '{{ report_data.total_cases }}'],
+        ['Total Executions', '{{ report_data.total_executions }}'],
+        ['Passed Tests', '{{ report_data.passed }}'],
+        ['Failed Tests', '{{ report_data.failed }}'],
+        ['Blocked Tests', '{{ report_data.blocked }}'],
+        ['Pass Rate', '{{ report_data.pass_rate }}%']
+    ];
+    
+    let csvContent = data.map(row => row.join(',')).join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'test_report.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
+}
+</script>
+{% endblock %}

@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h2 fw-bold text-dark mb-1">{{ project.name }} - Test Cases</h1>
+        <p class="text-muted">Manage test cases for this project</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('create_test_case') }}?project_id={{ project.id }}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Add Test Case
+        </a>
+        <a href="{{ url_for('projects') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Back to Projects
+        </a>
+    </div>
+</div>
+
+<!-- Project Info -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-8">
+                <h5 class="mb-1">{{ project.name }}</h5>
+                <p class="text-muted mb-0">{{ project.description or 'No description provided' }}</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <span class="badge bg-{% if project.status == 'Active' %}success{% elif project.status == 'Completed' %}info{% elif project.status == 'On Hold' %}warning{% else %}secondary{% endif %} px-3 py-2">
+                    {{ project.status or 'Active' }}
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Test Suites -->
+{% if test_suites %}
+<div class="card mb-4">
+    <div class="card-header">
+        <h6 class="mb-0">Test Suites</h6>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            {% for suite in test_suites %}
+            <div class="col-md-4 mb-3">
+                <div class="card border">
+                    <div class="card-body">
+                        <h6 class="card-title">{{ suite.name }}</h6>
+                        <p class="card-text small text-muted">{{ suite.description or 'No description' }}</p>
+                        <a href="{{ url_for('test_suites') }}" class="btn btn-sm btn-outline-primary">View Suite</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Test Cases -->
+<div class="card">
+    <div class="card-header">
+        <h6 class="mb-0">Test Cases ({{ test_cases|length }})</h6>
+    </div>
+    <div class="card-body">
+        {% if test_cases %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Test Case</th>
+                        <th>Priority</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                        <th>Last Execution</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for case in test_cases %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="bg-primary bg-opacity-10 rounded-circle p-2 me-3">
+                                    <i class="fas fa-vial text-primary"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">{{ case.title }}</h6>
+                                    <small class="text-muted">TC-{{ case.id }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-{% if case.priority == 'Critical' %}danger{% elif case.priority == 'High' %}warning{% elif case.priority == 'Medium' %}info{% else %}secondary{% endif %}">
+                                {{ case.priority or 'Medium' }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-dark">{{ case.type or 'Manual' }}</span>
+                        </td>
+                        <td>
+                            <span class="badge bg-success">Active</span>
+                        </td>
+                        <td>
+                            <span class="text-muted">{{ case.created_at.strftime('%b %d, %Y') }}</span>
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <a href="{{ url_for('execute_test_case', case_id=case.id) }}" class="btn btn-sm btn-success">
+                                    <i class="fas fa-play me-1"></i>Execute
+                                </a>
+                                <a href="{{ url_for('edit_test_case', case_id=case.id) }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-edit me-1"></i>Edit
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-vial fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">No test cases found</h5>
+            <p class="text-muted">Create test cases for this project to start testing</p>
+            <a href="{{ url_for('create_test_case') }}?project_id={{ project.id }}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>Create First Test Case
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

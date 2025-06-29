@@ -1,0 +1,2 @@
+-- This file will be executed after database initialization
+-- Tables will be created by the Flask application
