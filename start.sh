@@ -1,40 +1,46 @@
 #!/bin/bash
 
-# Test Management Tool - Startup Script
-echo "🚀 Starting Test Management Tool..."
-echo "=================================="
+echo "🚀 Starting Test Management Tool with Docker Compose..."
+echo "=================================================="
 
-# Check if Docker is running
-if ! docker info > /dev/null 2>&1; then
-    echo "❌ Docker is not running. Please start Docker first."
+# Check if Docker and Docker Compose are available
+if ! command -v docker &> /dev/null; then
+    echo "❌ Docker is not installed or not in PATH"
     exit 1
 fi
 
-# Navigate to project directory
-cd "$(dirname "$0")"
+if ! command -v docker-compose &> /dev/null && ! docker compose version &> /dev/null; then
+    echo "❌ Docker Compose is not installed or not in PATH"
+    exit 1
+fi
 
-# Start the application
-echo "📦 Starting containers..."
-docker compose up -d
+# Create uploads directory if it doesn't exist
+mkdir -p uploads
 
-# Wait a moment for containers to start
-sleep 8
-
-# Initialize database tables
-echo "🔧 Initializing database..."
-./init_tables.sh
-
-# Check if containers are running
-if docker ps | grep -q "test_management"; then
-    echo "✅ Application started successfully!"
-    echo ""
-    echo "🌐 Access your application at: http://localhost:5000"
-    echo "📊 Monitor with: docker stats"
-    echo "📝 View logs with: docker logs test_management_web"
-    echo "🛑 Stop with: ./stop.sh"
-    echo ""
+# Start the services
+echo "📦 Building and starting containers..."
+if docker compose version &> /dev/null; then
+    docker compose up -d --build
 else
-    echo "❌ Failed to start containers. Check logs with:"
-    echo "   docker logs test_management_web"
-    echo "   docker logs test_management_db"
+    docker-compose up -d --build
+fi
+
+if [ $? -eq 0 ]; then
+    echo ""
+    echo "✅ Test Management Tool is now running!"
+    echo ""
+    echo "🌐 Access the application:"
+    echo "   URL: http://localhost:5000"
+    echo ""
+    echo "📊 Check status:"
+    echo "   docker compose ps"
+    echo ""
+    echo "📝 View logs:"
+    echo "   docker compose logs -f"
+    echo ""
+    echo "🛑 Stop the application:"
+    echo "   ./stop.sh"
+else
+    echo "❌ Failed to start the application"
+    exit 1
 fi

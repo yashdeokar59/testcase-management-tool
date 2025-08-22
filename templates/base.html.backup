@@ -31,8 +31,7 @@
         }
         
         .sidebar {
-            height: 100vh;
-            max-height: 100vh;
+            min-height: 100vh;
             background: var(--sidebar-bg);
             box-shadow: 2px 0 10px rgba(0,0,0,0.1);
             position: fixed;
@@ -40,10 +39,6 @@
             left: 0;
             width: 280px;
             z-index: 1000;
-            overflow-y: auto;
-            overflow-x: hidden;
-            display: flex;
-            flex-direction: column;
         }
         
         .sidebar .nav-link {
@@ -256,103 +251,10 @@
             margin: 0;
         }
         
-        
-        .sidebar-nav {
-            flex: 1;
-            overflow-y: auto;
-            overflow-x: hidden;
-            padding-bottom: 10px;
-        }
-        
-        .sidebar-nav::-webkit-scrollbar {
-            width: 6px;
-        }
-        
-        .sidebar-nav::-webkit-scrollbar-track {
-            background: rgba(255,255,255,0.1);
-        }
-        
-        .sidebar-nav::-webkit-scrollbar-thumb {
-            background: rgba(255,255,255,0.3);
-            border-radius: 3px;
-        }
-        
-        .sidebar-nav::-webkit-scrollbar-thumb:hover {
-            background: rgba(255,255,255,0.5);
-        }
-
-        
-        /* Flash message auto-hide animation */
-        @keyframes countdown {
-            from { width: 100%; }
-            to { width: 0%; }
-        }
-        
-        /* Flash message styling improvements */
-        .alert {
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            margin-bottom: 15px;
-        }
-        
-        .alert-success {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            border: none;
-            color: white;
-        }
-        
-        .alert-info {
-            background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
-            border: none;
-            color: white;
-        }
-        
-        .alert-warning {
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-            border: none;
-            color: white;
-        }
-        
-        .alert-danger {
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-            border: none;
-            color: white;
-        }
-        
-        .alert .btn-close {
-        
-        /* Fade out animation for auto-dismissing alerts */
-        .alert.auto-dismissing {
-            animation: fadeOutUp 0.5s ease-in-out forwards;
-        }
-        
-        @keyframes fadeOutUp {
-            0% {
-                opacity: 1;
-                transform: translateY(0);
-            }
-            100% {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-        }
-            filter: brightness(0) invert(1);
-        }
-
-        @keyframes subtle-pulse {
-            0%, 100% { box-shadow: 0 0 5px rgba(255,255,255,0.1); }
-            50% { box-shadow: 0 0 15px rgba(255,255,255,0.2); }
-        }
-
         .user-profile {
-            animation: subtle-pulse 3s ease-in-out infinite;
-            background: rgba(0,0,0,0.1);
-            border-radius: 10px 10px 0 0;
             padding: 20px;
             border-top: 1px solid rgba(255,255,255,0.1);
             margin-top: auto;
-            flex-shrink: 0;
-        }
             position: relative;
         }
         
@@ -450,83 +352,6 @@
         }
         
         @media (max-width: 768px) {
-            .sidebar {
-                height: 100vh !important;
-            }
-            
-            .sidebar-nav {
-                max-height: calc(100vh - 200px) !important;
-            }
-            
-        
-        /* Flash message auto-hide animation */
-        @keyframes countdown {
-            from { width: 100%; }
-            to { width: 0%; }
-        }
-        
-        /* Flash message styling improvements */
-        .alert {
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            margin-bottom: 15px;
-        }
-        
-        .alert-success {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            border: none;
-            color: white;
-        }
-        
-        .alert-info {
-            background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
-            border: none;
-            color: white;
-        }
-        
-        .alert-warning {
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-            border: none;
-            color: white;
-        }
-        
-        .alert-danger {
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-            border: none;
-            color: white;
-        }
-        
-        .alert .btn-close {
-        
-        /* Fade out animation for auto-dismissing alerts */
-        .alert.auto-dismissing {
-            animation: fadeOutUp 0.5s ease-in-out forwards;
-        }
-        
-        @keyframes fadeOutUp {
-            0% {
-                opacity: 1;
-                transform: translateY(0);
-            }
-            100% {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-        }
-            filter: brightness(0) invert(1);
-        }
-
-        @keyframes subtle-pulse {
-            0%, 100% { box-shadow: 0 0 5px rgba(255,255,255,0.1); }
-            50% { box-shadow: 0 0 15px rgba(255,255,255,0.2); }
-        }
-
-            .user-profile {
-            animation: subtle-pulse 3s ease-in-out infinite;
-                position: sticky;
-                bottom: 0;
-                background: rgba(0,0,0,0.2) !important;
-            }
             .sidebar {
                 transform: translateX(-100%);
                 transition: transform 0.3s ease;
@@ -655,95 +480,6 @@
                 document.body.classList.add('compact-view');
             }
             
-            
-            // Auto-hide flash messages after 10 seconds
-            // Only auto-hide success and info messages (not warnings or errors)
-            const flashMessages = document.querySelectorAll(".alert-success, .alert-info");
-            flashMessages.forEach(function(alert) {
-                let timeoutId;
-                let startTime = Date.now();
-                let remainingTime = 10000; // 10 seconds
-                
-                // Add a progress bar to show countdown
-                const progressBar = document.createElement("div");
-                progressBar.className = "alert-progress-bar";
-                progressBar.style.cssText = `
-                    position: absolute;
-                    bottom: 0;
-                    left: 0;
-                    height: 3px;
-                    background: rgba(255,255,255,0.8);
-                    width: 100%;
-                    animation: countdown 10s linear forwards;
-                    border-radius: 0 0 4px 4px;
-                `;
-                
-                // Make alert position relative for progress bar
-                
-                // Add countdown indicator to close button
-                const closeBtn = alert.querySelector(".btn-close");
-                if (closeBtn) {
-                    let countdown = 10;
-                    const originalTitle = closeBtn.title || "Close";
-                    
-                    const updateCountdown = () => {
-                        closeBtn.title = `${originalTitle} (auto-close in ${countdown}s)`;
-                        countdown--;
-                    };
-                    
-                    updateCountdown();
-                    const countdownInterval = setInterval(updateCountdown, 1000);
-                    
-                    // Clear interval when alert is manually closed or auto-closed
-                    const observer = new MutationObserver(() => {
-                        if (!document.contains(alert)) {
-                            clearInterval(countdownInterval);
-                            observer.disconnect();
-                        }
-                    });
-                    observer.observe(document.body, { childList: true, subtree: true });
-                }
-                alert.style.position = "relative";
-                alert.style.overflow = "hidden";
-                alert.appendChild(progressBar);
-                
-                // Function to start countdown
-                function startCountdown() {
-                    timeoutId = setTimeout(function() {
-                        if (alert && alert.parentNode) {
-                            // Use Bootstrap's alert dismiss functionality
-                            // Add fade-out animation
-                            alert.classList.add("auto-dismissing");
-                            // Wait for animation to complete before removing
-                            setTimeout(() => {
-                                const bsAlert = new bootstrap.Alert(alert);
-                                bsAlert.close();
-                            }, 500); // Match animation duration
-                        }
-                    }, remainingTime);
-                }
-                
-                // Start initial countdown
-                startCountdown();
-                
-                // Pause on hover
-                alert.addEventListener("mouseenter", function() {
-                    clearTimeout(timeoutId);
-                    const elapsed = Date.now() - startTime;
-                    remainingTime = Math.max(0, 10000 - elapsed);
-                    progressBar.style.animationPlayState = "paused";
-                });
-                
-                // Resume on mouse leave
-                alert.addEventListener("mouseleave", function() {
-                    if (remainingTime > 0) {
-                        startTime = Date.now();
-                        progressBar.style.animation = `countdown ${remainingTime}ms linear forwards`;
-                        startCountdown();
-                    }
-                });
-            });
-
             // Apply animation preference
             if (!userAnimations) {
                 document.body.classList.add('no-animations');
@@ -760,7 +496,7 @@
                 <small class="text-white-50">Test Management Suite</small>
             </div>
             
-            <div class="sidebar-nav"><ul class="nav flex-column">
+            <ul class="nav flex-column flex-grow-1">
                 <li class="nav-item">
                     <a class="nav-link {{ 'active' if request.endpoint == 'dashboard' }}" href="{{ url_for('dashboard') }}">
                         <i class="fas fa-tachometer-alt"></i> Dashboard
@@ -815,7 +551,7 @@
                     </a>
                 </li>
                 {% endif %}
-            </ul></div>
+            </ul>
             
             <div class="user-profile">
                 <div class="dropdown dropup">
@@ -835,7 +571,6 @@
                         <li><a class="dropdown-item" href="{{ url_for('profile') }}"><i class="fas fa-user me-2"></i>Profile</a></li>
                         <li><a class="dropdown-item" href="{{ url_for('settings') }}"><i class="fas fa-cog me-2"></i>Settings</a></li>
                         <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="#" onclick="forceSessionEnd()"><i class="fas fa-stopwatch me-2"></i>End Session</a></li>
                         <li><a class="dropdown-item" href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt me-2"></i>Sign out</a></li>
                     </ul>
                 </div>
@@ -886,7 +621,7 @@
                     <button type="button" class="btn btn-success" onclick="extendSession()">
                         <i class="fas fa-clock me-2"></i>Stay Logged In
                     </button>
-                    <button type="button" class="btn btn-danger" onclick="logoutNow(); return false;" onmousedown="setTimeout(() => window.location.href = '/logout', 100)">
+                    <button type="button" class="btn btn-danger" onclick="logoutNow()">
                         <i class="fas fa-sign-out-alt me-2"></i>Logout Now
                     </button>
                 </div>
@@ -915,7 +650,7 @@
                     </div>
                 </div>
                 <div class="modal-footer justify-content-center">
-                    <button type="button" class="btn btn-primary" onclick="redirectToLogin(); return false;" onmousedown="setTimeout(() => window.location.href = '/login', 100)">
+                    <button type="button" class="btn btn-primary" onclick="redirectToLogin()">
                         <i class="fas fa-sign-in-alt me-2"></i>Go to Login
                     </button>
                 </div>
@@ -1014,47 +749,11 @@
     }
     
     function showSessionExpiredModal() {
-        console.log("Session expired - showing modal...");
-        
         // Hide timeout warning modal if shown
-        const timeoutModal = bootstrap.Modal.getInstance(document.getElementById("sessionTimeoutModal"));
+        const timeoutModal = bootstrap.Modal.getInstance(document.getElementById('sessionTimeoutModal'));
         if (timeoutModal) {
-            console.log("Hiding timeout warning modal...");
             timeoutModal.hide();
         }
-        
-        // Show expired modal
-        try {
-            const expiredModalElement = document.getElementById("sessionExpiredModal");
-            if (expiredModalElement) {
-                console.log("Showing session expired modal...");
-                const expiredModal = new bootstrap.Modal(expiredModalElement);
-                expiredModal.show();
-                
-                // Add event listener for when modal is shown
-                expiredModalElement.addEventListener("shown.bs.modal", function() {
-                    console.log("Session expired modal is now visible");
-                });
-            } else {
-                console.error("Session expired modal element not found!");
-                // Fallback - direct redirect
-                redirectToLogin();
-            }
-        } catch (error) {
-            console.error("Error showing session expired modal:", error);
-            // Fallback - direct redirect
-            redirectToLogin();
-        }
-        
-        // Clear all intervals
-        clearAllTimeouts();
-        
-        // Auto-redirect after 10 seconds if user doesn't click
-        setTimeout(() => {
-            console.log("Auto-redirecting after 10 seconds...");
-            redirectToLogin();
-        }, 10000);
-    }
         
         // Show expired modal
         const expiredModal = new bootstrap.Modal(document.getElementById('sessionExpiredModal'));
@@ -1103,61 +802,11 @@
     }
     
     function logoutNow() {
-        console.log("Logging out now...");
-        
-        // Clear any existing session data
-        try {
-            localStorage.clear();
-            sessionStorage.clear();
-        } catch (e) {
-            console.log("Storage clear error:", e);
-        }
-        
-        // Force logout with cache busting
-        const logoutUrl = "/logout?t=" + Date.now();
-        console.log("Redirecting to:", logoutUrl);
-        
-        // Try multiple redirect methods
-        try {
-            window.location.replace(logoutUrl);
-        } catch (e) {
-            console.log("Replace failed, trying href:", e);
-            window.location.href = logoutUrl;
-        }
+        window.location.href = '/logout';
     }
     
     function redirectToLogin() {
-        console.log("Redirecting to login page...");
-        
-        // Clear any existing session data
-        try {
-            // Clear local storage
-            localStorage.clear();
-            // Clear session storage
-            sessionStorage.clear();
-        } catch (e) {
-            console.log("Storage clear error:", e);
-        }
-        
-        // Force redirect to login with cache busting
-        const loginUrl = "/login?t=" + Date.now();
-        console.log("Redirecting to:", loginUrl);
-        
-        // Try multiple redirect methods
-        try {
-            window.location.replace(loginUrl);
-        } catch (e) {
-            console.log("Replace failed, trying href:", e);
-            window.location.href = loginUrl;
-        }
-        
-        // Fallback after delay
-        setTimeout(() => {
-            if (window.location.pathname !== "/login") {
-                console.log("Fallback redirect...");
-                window.location = loginUrl;
-            }
-        }, 1000);
+        window.location.href = '/login';
     }
     
     function clearAllTimeouts() {

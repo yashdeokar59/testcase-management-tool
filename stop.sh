@@ -1,14 +1,21 @@
 #!/bin/bash
 
-# Test Management Tool - Stop Script
 echo "🛑 Stopping Test Management Tool..."
 echo "================================="
 
-# Navigate to project directory
-cd "$(dirname "$0")"
+# Stop and remove containers
+if docker compose version &> /dev/null; then
+    docker compose down
+else
+    docker-compose down
+fi
 
-# Stop the application
-docker compose down
-
-echo "✅ Application stopped successfully!"
-echo "🚀 To start again, run: ./start.sh"
+if [ $? -eq 0 ]; then
+    echo "✅ Test Management Tool stopped successfully!"
+    echo ""
+    echo "💾 Data is preserved in Docker volumes"
+    echo "🗑️  To remove all data: docker compose down -v"
+else
+    echo "❌ Failed to stop the application"
+    exit 1
+fi

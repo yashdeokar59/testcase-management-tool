@@ -1,2 +1,5 @@
--- This file will be executed after database initialization
--- Tables will be created by the Flask application
+-- Initialize Test Management Database
+USE testmanagement;
+
+-- Create a default admin user (optional)
+-- This will be handled by the application

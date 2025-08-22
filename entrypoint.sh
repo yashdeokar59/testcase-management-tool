@@ -2,12 +2,14 @@
 
 echo "Starting Test Management Tool..."
 
-# Wait for database to be ready
+# Wait for database to be ready using Python script
 echo "Waiting for database to be ready..."
-while ! mysqladmin ping -h db -u root -ppassword --silent; do
-    echo "Waiting for database connection..."
-    sleep 2
-done
+python wait_for_db.py
+
+if [ $? -ne 0 ]; then
+    echo "❌ Failed to connect to database. Exiting..."
+    exit 1
+fi
 
 echo "Database is ready!"
 

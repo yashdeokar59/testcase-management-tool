@@ -2,171 +2,355 @@
 
 A Flask-based web application for managing tests with user authentication, file uploads, and MySQL database integration.
 
-## 🚀 Quick Start
+**Two deployment options available:**
+- 🐳 **Docker Compose** - For local development and testing
+- ☸️ **Kubernetes** - For production deployment and scaling
+
+## 🐳 Quick Start (Docker Compose)
 
 ### Prerequisites
-- Docker and Docker Compose installed on your system
-- Port 5000 and 3306 available on your machine
+- Docker and Docker Compose installed
+- 4GB+ available RAM
 
-### Running the Server
+### Deploy with Docker Compose
+```bash
+# Start the application
+./start.sh
 
-1. **Navigate to the project directory:**
-   ```bash
-   cd /home/yash/test-management-tool
-   ```
+# Access at: http://localhost:5000
 
-2. **Start the application (Recommended):**
-   ```bash
-   ./start.sh
-   ```
-   This script will:
-   - Start the Docker containers
-   - Automatically initialize database tables
-   - Verify everything is working
+# Stop the application  
+./stop.sh
+```
 
-3. **Alternative manual start:**
-   ```bash
-   docker compose up -d
-   ./init_tables.sh  # Initialize database tables
-   ```
+### Docker Compose Management
+```bash
+# View logs
+docker compose logs -f
 
-4. **Access the application:**
-   - Open your browser and go to: http://localhost:5000
-   - The application will redirect you to the login page
+# Check status
+docker compose ps
 
-5. **Stop the application:**
-   ```bash
-   ./stop.sh
-   ```
+# Restart services
+docker compose restart
 
-**✅ The application now automatically handles database initialization, so no manual setup is required!**
+# Remove everything (including data)
+docker compose down -v
+```
+
+## ☸️ Quick Start (Kubernetes)
+
+### Prerequisites
+- Kubernetes cluster (kubeadm, kind, or cloud provider)
+- kubectl configured to access your cluster
+- Docker for building images
+
+### Deploy with Kubernetes
+```bash
+# Deploy everything with one command
+./k8s/deploy.sh
+```
+
+### Access the Application
+```bash
+# Via Port Forward (recommended)
+kubectl port-forward -n test-management svc/web-service 8080:80
+# Then visit: http://localhost:8080
+
+# Via NodePort (if supported)
+http://localhost:30080
+
+# Via Ingress (add to /etc/hosts first)
+echo '127.0.0.1 test-management.local' | sudo tee -a /etc/hosts
+http://test-management.local
+```
+
+### Kubernetes Management
+```bash
+# Monitor the deployment
+./k8s/monitor.sh
+
+# Test deployment
+./k8s/test-deployment.sh
+
+# Clean up
+./k8s/cleanup.sh
+```
 
 ## 📁 Project Structure
 
 ```
 test-management-tool/
-├── app.py                 # Main Flask application
-├── models.py             # Database models
-├── requirements.txt      # Python dependencies
-├── Dockerfile           # Docker configuration for web app
-├── docker-compose.yml   # Docker Compose configuration
-├── init.sql            # Database initialization
-├── .env                # Environment variables
-├── .dockerignore       # Docker ignore file
-├── mysql-config/       # MySQL configuration files
-├── templates/          # HTML templates
-└── uploads/           # File upload directory
+├── 📱 Application Files
+│   ├── app.py                 # Main Flask application
+│   ├── models.py             # Database models
+│   ├── requirements.txt      # Python dependencies
+│   ├── Dockerfile           # Docker configuration
+│   ├── entrypoint.sh        # Container startup script
+│   ├── init_db.py          # Database initialization
+│   ├── wait_for_db.py      # Database connection helper
+│   └── templates/          # HTML templates
+│
+├── 🐳 Docker Compose Setup
+│   ├── docker-compose.yml   # Docker Compose configuration
+│   ├── start.sh            # Start Docker Compose
+│   ├── stop.sh             # Stop Docker Compose
+│   ├── .env                # Environment variables
+│   ├── init.sql            # Database initialization
+│   └── uploads/            # File uploads directory
+│
+└── ☸️ Kubernetes Setup
+    └── k8s/               # Kubernetes manifests and scripts
+        ├── deploy.sh           # One-command deployment
+        ├── cleanup.sh          # Complete cleanup
+        ├── monitor.sh          # Health monitoring
+        ├── test-deployment.sh  # Deployment testing
+        ├── namespace.yaml      # Namespace creation
+        ├── configmap.yaml      # Application configuration
+        ├── secret.yaml         # Database credentials
+        ├── persistent-volume.yaml # Storage volumes
+        ├── mysql-deployment.yaml  # MySQL database
+        ├── mysql-service.yaml     # MySQL service
+        ├── mysql-init-configmap.yaml # DB initialization
+        ├── web-deployment.yaml    # Web application
+        ├── web-service.yaml       # Web service
+        ├── ingress.yaml          # External access
+        ├── hpa.yaml             # Auto-scaling
+        ├── network-policy.yaml  # Security policies
+        ├── README.md           # Detailed documentation
+        └── DEPLOYMENT_GUIDE.md # Step-by-step guide
 ```
 
-## 🔧 Development Commands
+## 🏗️ Architecture
 
-### View Application Logs
-```bash
-docker logs test_management_web
+### Docker Compose Architecture
+```
+┌─────────────────┐
+│   Host Machine  │
+│                 │
+│  ┌───────────┐  │
+│  │    Web    │  │ :5000
+│  │ Container │  │
+│  └─────┬─────┘  │
+│        │        │
+│  ┌─────▼─────┐  │
+│  │  MySQL    │  │ :3306
+│  │ Container │  │
+│  └───────────┘  │
+│                 │
+│ Volume: mysql_data
+│ Volume: ./uploads
+└─────────────────┘
 ```
 
-### View Database Logs
-```bash
-docker logs test_management_db
+### Kubernetes Architecture
 ```
-
-### Monitor Resource Usage
-```bash
-docker stats
-```
-
-### Access Database Directly
-```bash
-docker exec -it test_management_db mysql -u root -p
-# Password: password
-```
-
-### Rebuild After Code Changes
-```bash
-docker compose down
-docker compose build
-docker compose up -d
+┌─────────────────┐    ┌─────────────────┐
+│   Ingress       │    │   NodePort      │
+│ (Port 80/443)   │    │   (Port 30080)  │
+└─────────┬───────┘    └─────────┬───────┘
+          │                      │
+          └──────────┬───────────┘
+                     │
+          ┌─────────────────┐
+          │  Web Service    │
+          │   (Port 80)     │
+          └─────────┬───────┘
+                    │
+          ┌─────────────────┐
+          │ Web Deployment  │
+          │  (2-10 pods)    │
+          │   Flask App     │
+          └─────────┬───────┘
+                    │
+          ┌─────────────────┐
+          │ MySQL Service   │
+          │   (Port 3306)   │
+          └─────────┬───────┘
+                    │
+          ┌─────────────────┐
+          │MySQL Deployment │
+          │    (1 pod)      │
+          │  + Persistent   │
+          │    Storage      │
+          └─────────────────┘
 ```
 
 ## 🌐 Application Features
 
-- **User Authentication**: Login/logout functionality
+- **User Authentication**: Login/logout functionality with session management
+- **Test Management**: Create, edit, and organize test cases
+- **Project Management**: Organize tests by projects and test suites
 - **File Management**: Upload and manage test files
-- **Database Integration**: MySQL 8.0 with optimized performance
-- **Production Ready**: Uses Gunicorn WSGI server
-- **Containerized**: Fully dockerized application
+- **Bug Tracking**: Report and track bugs
+- **Assignment System**: Assign tests to team members
+- **Requirements Management**: Link tests to requirements
+- **Dashboard**: Overview of test execution status
 
-## 🔒 Default Configuration
+## 🔧 Configuration
 
-- **Web Application**: http://localhost:5000
-- **Database**: MySQL 8.0 on port 3306
-- **Database Credentials**:
-  - Root Password: `password`
-  - Database: `testmanagement`
-  - User: `testuser`
-  - Password: `testpass`
+### Docker Compose Configuration
+- **Database**: MySQL 8.0 with persistent volume
+- **Web App**: Flask with Gunicorn
+- **Networking**: Bridge network for container communication
+- **Volumes**: Persistent data and file uploads
 
-## 🛠️ Troubleshooting
+### Kubernetes Configuration
+- **Auto-scaling**: HPA for handling load (2-10 replicas)
+- **High Availability**: Multiple replicas with health checks
+- **Persistent Storage**: Database and uploads survive pod restarts
+- **Resource Limits**: CPU and memory limits configured
+- **Security**: Network policies and secrets management
 
-### Container Issues
+## 🛠️ Development Commands
+
+### Docker Compose Commands
+```bash
+# View application logs
+docker compose logs -f web
+
+# View database logs
+docker compose logs -f db
+
+# Access database directly
+docker compose exec db mysql -u root -ppassword testmanagement
+
+# Rebuild and restart
+docker compose up -d --build
+
+# Scale web service (Docker Swarm mode)
+docker service scale testcase_web=3
+```
+
+### Kubernetes Commands
+```bash
+# View application logs
+kubectl logs -f deployment/web-deployment -n test-management
+
+# View database logs
+kubectl logs -f deployment/mysql-deployment -n test-management
+
+# Scale application
+kubectl scale deployment web-deployment --replicas=5 -n test-management
+
+# Update application
+docker build -t testcase-managment-tool-web:v2.0 .
+kind load docker-image testcase-managment-tool-web:v2.0 --name test-management-cluster
+kubectl set image deployment/web-deployment web=testcase-managment-tool-web:v2.0 -n test-management
+
+# Access database directly
+kubectl exec -it deployment/mysql-deployment -n test-management -- mysql -u root -ppassword
+```
+
+## 📊 Monitoring
+
+### Docker Compose Monitoring
 ```bash
 # Check container status
-docker ps
+docker compose ps
 
-# View all containers (including stopped)
-docker ps -a
+# Monitor resource usage
+docker stats
 
-# Restart containers
-docker compose restart
+# View container details
+docker compose top
 ```
 
-### Database Connection Issues
+### Kubernetes Monitoring
 ```bash
-# Check database health
-docker exec test_management_db mysqladmin ping -h localhost -u root -ppassword
+# Check deployment status
+kubectl get all -n test-management
+
+# Monitor resource usage
+kubectl top pods -n test-management
+
+# View events
+kubectl get events -n test-management --sort-by='.lastTimestamp'
 ```
 
-### Port Conflicts
-If ports 5000 or 3306 are already in use, modify the ports in `docker-compose.yml`:
-```yaml
-ports:
-  - "8080:5000"  # Change 5000 to 8080
-```
+## 🔒 Security Features
 
-## 📊 Performance Optimizations
+### Docker Compose Security
+- Container isolation
+- Environment variable management
+- Volume permissions
+- Network segmentation
 
-The application includes several performance optimizations:
-- Gunicorn WSGI server with multiple workers
-- MySQL performance tuning
-- Connection pooling
-- Resource limits and health checks
-- Optimized Docker images
+### Kubernetes Security
+- Network policies for micro-segmentation
+- Secrets management for sensitive data
+- RBAC and service accounts
+- Resource limits to prevent resource exhaustion
+- Health checks for automatic recovery
 
-## 🔄 Updates and Maintenance
+## 🚀 Deployment Comparison
 
-### Update Application Code
-1. Make your changes to the code
-2. Rebuild and restart:
-   ```bash
-   docker compose down
-   docker compose build
-   docker compose up -d
-   ```
-
-### Backup Database
-```bash
-docker exec test_management_db mysqldump -u root -ppassword testmanagement > backup.sql
-```
-
-### Restore Database
-```bash
-docker exec -i test_management_db mysql -u root -ppassword testmanagement < backup.sql
-```
+| Feature | Docker Compose | Kubernetes |
+|---------|----------------|------------|
+| **Use Case** | Local development, testing | Production, scaling |
+| **Setup Complexity** | Simple | Moderate |
+| **Scalability** | Limited | Excellent |
+| **High Availability** | No | Yes |
+| **Auto-scaling** | No | Yes (HPA) |
+| **Load Balancing** | Basic | Advanced |
+| **Rolling Updates** | Manual | Automatic |
+| **Resource Management** | Basic | Advanced |
+| **Monitoring** | Basic | Advanced |
+| **Multi-node** | No | Yes |
 
 ## 📞 Support
 
-If you encounter any issues:
-1. Check the logs using the commands above
-2. Ensure Docker and Docker Compose are properly installed
-3. Verify that required ports are not in use by other applications
-4. Make sure you have sufficient disk space and memory
+### Docker Compose Support
+- Check `docker-compose.yml` for configuration
+- Use `docker compose logs` for troubleshooting
+- Ensure Docker and Docker Compose are updated
+
+### Kubernetes Support
+- Check `k8s/README.md` for comprehensive documentation
+- Check `k8s/DEPLOYMENT_GUIDE.md` for step-by-step instructions
+- Run `./k8s/monitor.sh` for health status
+- Run `./k8s/test-deployment.sh` for deployment verification
+
+## 🎉 Quick Verification
+
+### Docker Compose Verification
+```bash
+# Start the application
+./start.sh
+
+# Check if running
+curl -I http://localhost:5000
+
+# View status
+docker compose ps
+```
+
+### Kubernetes Verification
+```bash
+# Deploy and test
+./k8s/deploy.sh
+./k8s/test-deployment.sh
+
+# Access the application
+kubectl port-forward -n test-management svc/web-service 8080:80
+# Visit: http://localhost:8080
+```
+
+## 🎯 Choosing the Right Deployment
+
+### Use Docker Compose when:
+- ✅ Local development and testing
+- ✅ Simple single-machine deployment
+- ✅ Quick prototyping
+- ✅ Learning the application
+- ✅ CI/CD testing environments
+
+### Use Kubernetes when:
+- ✅ Production deployment
+- ✅ Need high availability
+- ✅ Auto-scaling requirements
+- ✅ Multi-node clusters
+- ✅ Advanced monitoring and logging
+- ✅ Rolling updates and rollbacks
+
+**Status: ✅ Ready for both Docker Compose and Kubernetes deployment**
