@@ -37,8 +37,8 @@ spec:
           echo "MySQL is ready!"
       containers:
       - name: web
-        image: testcase-managment-tool-web:latest
-        imagePullPolicy: Never  # Use local image
+        image: yashdeokar59/testcase-managment-tool-web:latest
+        imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 5000
           name: http
