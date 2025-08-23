@@ -7,7 +7,7 @@ metadata:
     app: test-management-tool
     component: web
 spec:
-  replicas: 0
+  replicas: 2
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -23,18 +23,6 @@ spec:
         app: test-management-tool
         component: web
     spec:
-      initContainers:
-      - name: wait-for-mysql
-        image: busybox:1.35
-        command: ['sh', '-c']
-        args:
-        - |
-          echo "Waiting for MySQL to be ready..."
-          until nc -z mysql-service 3306; do
-            echo "MySQL not ready, waiting..."
-            sleep 2
-          done
-          echo "MySQL is ready!"
       containers:
       - name: web
         image: yashdeokar59/testcase-managment-tool-web:latest
@@ -61,20 +49,6 @@ spec:
           limits:
             memory: "256Mi"
             cpu: "200m"
-        livenessProbe:
-          httpGet:
-            path: /login
-            port: 5000
-          initialDelaySeconds: 30
-          periodSeconds: 10
-          timeoutSeconds: 5
-        readinessProbe:
-          httpGet:
-            path: /login
-            port: 5000
-          initialDelaySeconds: 5
-          periodSeconds: 5
-          timeoutSeconds: 3
       volumes:
       - name: uploads-storage
         persistentVolumeClaim:
