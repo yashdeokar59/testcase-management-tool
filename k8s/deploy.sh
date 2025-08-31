@@ -21,10 +21,10 @@ fi
 echo "✅ Connected to Kubernetes cluster"
 
 # Build Docker image if it doesn't exist
-echo "🔧 Building Docker image..."
+#echo "🔧 Building Docker image..."
 # cd .. # Already in correct directory
-docker build -t testcase-managment-tool-web:latest .
-echo "✅ Docker image built successfully"
+#docker build -t testcase-managment-tool-web:latest .
+#echo "✅ Docker image built successfully"
 
 # Apply Kubernetes manifests in order
 echo "📦 Applying Kubernetes manifests..."
